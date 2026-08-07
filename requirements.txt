@@ -1,0 +1,6 @@
+ultralytics
+opencv-python
+# Fusion plaka OCR'ı (plakaya özel eğitilmiş model, tespiti değil sadece
+# okumayı yapar -- GPU'n varsa [onnx] yerine [onnx-gpu] kullanabilirsin):
+fast-plate-ocr[onnx]
+pillow-heif

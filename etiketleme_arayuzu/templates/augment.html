@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Augment</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani genis">
+    <h1>Data Augment</h1>
+    <p class="aciklama">
+      Etiketli görselleri parlaklık/kontrast/keskinlik/blur/gölge/gürültü/
+      sıkıştırma teknikleriyle çoğaltır. Etiketler (kutu konumları) bu tekniklerden etkilenmez,
+      aynen kopyalanır. Çıktı, girdi klasörünün YANINA, ayrı bir klasöre
+      yazılır — orijinal veriye dokunulmaz. Sağdaki önizleme, ayarları
+      değiştirdikçe (kısa bir gecikmeyle) OTOMATİK güncellenir.
+    </p>
+
+    <div class="egitim-grid">
+      <div class="egitim-sol">
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Görsel Klasörü</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="gorsel_klasoru_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="klasor-sec-btn" data-hedef="gorsel_klasoru">KLASÖR SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Etiket Klasörü</strong> <span class="opsiyonel">(opsiyonel)</span>
+            <div class="secili-yol" id="etiket_klasoru_goster">— seçilmedi (otomatik: 'labels') —</div>
+          </div>
+          <button type="button" class="klasor-sec-btn" data-hedef="etiket_klasoru">KLASÖR SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>data.yaml</strong> <span class="opsiyonel">(opsiyonel)</span>
+            <div class="secili-yol" id="data_yaml_goster">— seçilmedi (otomatik aranacak) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="data_yaml">DOSYA SEÇ</button>
+        </div>
+
+        <label class="siniflar-label">Filtre (class)
+          <span class="opsiyonel">(boş/Tümü bırakırsan tüm etiketli görseller işlenir; bir class seçersen sadece onu içeren görseller çoğaltılır — klasör seçilince liste otomatik dolar)</span>
+          <select id="filtre">
+            <option value="">Tümü</option>
+          </select>
+        </label>
+
+        <label class="siniflar-label">Çıktı klasörü adı
+          <span class="opsiyonel">(görsel klasörünün yanında otomatik oluşturulur)</span>
+          <input type="text" id="cikti_adi" value="augment">
+        </label>
+        <div class="secili-yol" id="cikti_klasoru_goster">— önce görsel klasörü seç —</div>
+
+        <div class="augment-mod-satiri">
+          <label><input type="radio" name="mod" value="sabit" checked> Sabit (her görselden 1 çoğaltma, aynı ayarla)</label>
+          <label><input type="radio" name="mod" value="dinamik"> Dinamik (her görselden N çoğaltma, rastgele değerlerle)</label>
+        </div>
+
+        <label class="siniflar-label" id="adet-satiri" style="display:none">Dinamik modda görsel başına üretilecek adet
+          <input type="number" id="adet" value="3" min="1" max="50">
+        </label>
+
+        <table class="augment-tablo">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Teknik</th>
+              <th>Taban değer</th>
+              <th class="dinamik-sutun" style="display:none">Hedef değer (dinamik)</th>
+              <th>Açıklama</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="checkbox" class="teknik-aktif" data-teknik="parlaklik" checked></td>
+              <td>Parlaklık</td>
+              <td><input type="number" step="0.1" class="teknik-taban" data-teknik="parlaklik" value="1.3"></td>
+              <td class="dinamik-sutun" style="display:none"><input type="number" step="0.1" class="teknik-hedef" data-teknik="parlaklik" value="0.7"></td>
+              <td class="aciklama-hucre">1.0 = değişiklik yok, &lt;1 karanlık, &gt;1 parlak</td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="teknik-aktif" data-teknik="kontrast"></td>
+              <td>Kontrast</td>
+              <td><input type="number" step="0.1" class="teknik-taban" data-teknik="kontrast" value="1.3"></td>
+              <td class="dinamik-sutun" style="display:none"><input type="number" step="0.1" class="teknik-hedef" data-teknik="kontrast" value="0.7"></td>
+              <td class="aciklama-hucre">1.0 = değişiklik yok, &lt;1 düşük kontrast, &gt;1 yüksek kontrast</td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="teknik-aktif" data-teknik="keskinlik"></td>
+              <td>Keskinlik</td>
+              <td><input type="number" step="0.1" class="teknik-taban" data-teknik="keskinlik" value="1.5"></td>
+              <td class="dinamik-sutun" style="display:none"><input type="number" step="0.1" class="teknik-hedef" data-teknik="keskinlik" value="0.3"></td>
+              <td class="aciklama-hucre">1.0 = değişiklik yok, &lt;1 bulanık, &gt;1 keskin</td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="teknik-aktif" data-teknik="blur"></td>
+              <td>Blur</td>
+              <td><input type="number" step="0.5" class="teknik-taban" data-teknik="blur" value="2"></td>
+              <td class="dinamik-sutun" style="display:none"><input type="number" step="0.5" class="teknik-hedef" data-teknik="blur" value="5"></td>
+              <td class="aciklama-hucre">Gaussian blur yarıçapı (piksel), 0 = yok</td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="teknik-aktif" data-teknik="golge"></td>
+              <td>Gölge</td>
+              <td><input type="number" step="0.1" class="teknik-taban" data-teknik="golge" value="0.3"></td>
+              <td class="dinamik-sutun" style="display:none"><input type="number" step="0.1" class="teknik-hedef" data-teknik="golge" value="0.6"></td>
+              <td class="aciklama-hucre">0 = yok, 1 = tam karanlık gölge; rastgele bir kenardan düşer</td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="teknik-aktif" data-teknik="gurultu"></td>
+              <td>Gürültü</td>
+              <td><input type="number" step="1" class="teknik-taban" data-teknik="gurultu" value="15"></td>
+              <td class="dinamik-sutun" style="display:none"><input type="number" step="1" class="teknik-hedef" data-teknik="gurultu" value="40"></td>
+              <td class="aciklama-hucre">Piksel gürültüsü şiddeti (0=yok), düşük ışık/gece kamerasını taklit eder</td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="teknik-aktif" data-teknik="sikistirma"></td>
+              <td>Sıkıştırma</td>
+              <td><input type="number" step="5" class="teknik-taban" data-teknik="sikistirma" value="75"></td>
+              <td class="dinamik-sutun" style="display:none"><input type="number" step="5" class="teknik-hedef" data-teknik="sikistirma" value="30"></td>
+              <td class="aciklama-hucre">JPEG kalitesi (1-100) -- DÜŞÜK değer DAHA FAZLA bozulma demek; gerçek kamera/video kaydı artefaktlarını taklit eder</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="augment-buton-satiri">
+          <button type="button" id="calistir-btn" class="yukle-btn">ÇALIŞTIR</button>
+          <button type="button" id="sifirla-btn" class="klasor-degistir-btn-duz">Tümünü Sıfırla</button>
+        </div>
+        <p id="augment-hata" class="hata"></p>
+
+        <pre id="analiz-sonuc" class="analiz-kutusu gizli"></pre>
+      </div>
+
+      <div class="egitim-sag">
+        <div id="onizleme-sonuc" class="onizleme-kutusu gizli"></div>
+
+        <div id="onizleme-gorsel-satiri" class="augment-onizleme-gorsel-satiri gizli">
+          <div class="augment-onizleme-sutun">
+            <div class="augment-onizleme-etiket">Orijinal</div>
+            <img id="onizleme-gorsel-orijinal" alt="Orijinal görsel">
+          </div>
+          <div class="augment-onizleme-sutun">
+            <div class="augment-onizleme-etiket">Ayarlar uygulanmış hali</div>
+            <img id="onizleme-gorsel-filtreli" alt="Filtreli görsel">
+          </div>
+        </div>
+
+        <p id="onizleme-yukleniyor" class="opsiyonel gizli" style="margin-top:8px">Önizleme güncelleniyor...</p>
+      </div>
+    </div>
+  </section>
+
+  <script src="/static/augment.js"></script>
+</body>
+</html>

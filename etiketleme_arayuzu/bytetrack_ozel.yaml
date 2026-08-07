@@ -1,0 +1,27 @@
+# ByteTrack ayarları -- Sürekli İzleme (Fusion #9) için ultralytics'in
+# varsayılan bytetrack.yaml'ından TÜRETİLDİ, sadece iki değer değişti.
+#
+# NEDEN ÖZEL BİR DOSYA GEREKTİ (2026-07-31, gerçek bir hata bulunup
+# düzeltildi): varsayılan track_buffer=30 kare (~1 saniye @ 30fps) --
+# bir araç bariyer/kapı gibi bir engelin arkasında kısmen kaybolursa ya
+# da birkaç kare boyunca confidence eşiğinin altına düşerse, bu süre
+# dolduğunda tracker eski kimliği SİLİYOR, araç tekrar net göründüğünde
+# YENİ bir kimlik atıyor -- aynı fiziksel araç veritabanına 2 KERE
+# kaydedilmiş gibi görünüyordu (gerçek örnek: bir test videosunda aynı
+# araç bariyer önünde id5 sonra id9 olarak iki ayrı kayıt aldı).
+#
+# Değişenler:
+# - track_buffer: 30 -> 90 (yaklaşık 3-4 saniyeye kadar "kayıp" bir
+#   aracı, ID'sini SİLMEDEN bekletiyor -- bariyerde kısa bir duraklama/
+#   kısmi kapanmaya tolerans tanıyor).
+# - track_low_thresh: 0.1 -> 0.05 (düşük ama tamamen anlamsız olmayan
+#   tespitleri de tracker'a besleyip devamlılığı artırıyor -- DB'ye
+#   yazılan asıl güven skoru/durum ayrı, bu sadece takip devamlılığını
+#   etkiliyor).
+tracker_type: bytetrack
+track_high_thresh: 0.25
+track_low_thresh: 0.05
+new_track_thresh: 0.25
+track_buffer: 90
+match_thresh: 0.8
+fuse_score: True

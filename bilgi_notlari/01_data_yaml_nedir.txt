@@ -1,0 +1,61 @@
+DATA.YAML TAM OLARAK NEDİR
+
+Basitçe: "bu veri seti hangi sınıfları içeriyor, görseller/etiketler nerede"
+diye YOLO'ya (eğitim koduna) haber veren küçük bir ayar dosyası. Kendin
+elle yazman gerekmiyor, araçlar (Etiketleme, Splitter, Augment) otomatik
+oluşturuyor/güncelliyor.
+
+İçinde şunlar var:
+
+  train:  eğitimde kullanılacak görsellerin klasörü
+  val:    eğitim sırasında ara kontrol için kullanılacak görseller
+  test:   eğitim bittikten sonra son sınav için kullanılacak görseller
+  names:  sınıf ID -> sınıf adı eşlemesi, örnek:
+            0: renault_clio3
+            1: renault_clio4
+            2: fiat_egea
+
+NOT ("path" alanı hakkında, bir bug'dan ders): Bazı örneklerde bir de
+"path:" alanı görürsün (veri setinin "kök" klasörü). BİZ BUNU KASITLI
+OLARAK YAZMIYORUZ. Sebebi: "path: ." gibi göreli bir değer, dosyayı
+OKUYAN PROGRAMIN O ANKİ ÇALIŞMA DİZİNİNE göre çözülüyor — data.yaml'ın
+kendi bulunduğu klasöre göre DEĞİL. Bunu yaşadık: aynı data.yaml, Colab'da
+"%cd" ile doğru klasöre geçince çalıştı ama kendi Model Eğitimi
+arayüzümüzden (çalışma dizini etiketleme_arayuzu/ olduğu için) çalıştırınca
+yanlış klasörde arama yaptı ve "images not found" hatası verdi. Çözüm:
+"path" alanını hiç YAZMAMAK — o zaman ultralytics otomatik olarak
+data.yaml dosyasının KENDİ bulunduğu klasörü kullanıyor, nereden
+çalıştırılırsa çalıştırılsın (Colab, bu arayüz, elle terminal) hep doğru
+sonucu veriyor.
+
+EN ÖNEMLİ NOKTA: Etiket dosyaları (.txt) sınıfı sadece bir SAYI (0, 1, 2)
+olarak tutar, isim olarak tutmaz. O sayının HANGİ sınıfa karşılık geldiğini
+SADECE data.yaml'daki "names" listesi belirler. Yani:
+
+  - data.yaml'daki names listesinin SIRASI değişirse, mevcut TÜM etiketlerin
+    anlamı da değişir (0 numaralı etiket artık başka bir sınıfı gösterir).
+  - Bu yüzden var olan bir data.yaml'ın sınıf sırasını ASLA elle karıştırma.
+    Yeni bir sınıf eklemek gerekirse, listenin SONUNA eklenmeli, arası
+    değiştirilmemeli. Araçlar zaten bunu böyle yapıyor (kullanıcı onayı
+    isteyerek).
+
+Gerçek bir örnek (otopark/veri/data.yaml):
+
+  train: images
+  val: images
+  test: images
+  names:
+    0: renault_clio3
+    1: renault_clio4
+    2: fiat_egea
+
+Splitter çalıştırınca AYRI bir data.yaml daha üretiliyor (otopark/veri/split/data.yaml),
+o da aynı sınıf listesini kullanıyor ama train/val/test yollarını
+split/images/train, split/images/val, split/images/test olarak gösteriyor.
+
+Bir kez şunu yaşadık (ders çıkarılan bug): sınıf sırası bir yerde 0=clio3
+1=clio4 iken başka bir oturumda ters etiketlenmiş, sonuçta 26 clio3
+görseli "clio4" diye, 60 clio4 görseli "clio3" diye etiketlenmiş çıktı.
+Sebebi: farklı klasörler ayrı ayrı açılıp etiketlenirken sınıf sırası
+tutarlı kalmamıştı. Ders: aynı proje için hep AYNI data.yaml'ı kullan,
+farklı oturumlarda sınıf sırasının karışmadığından emin ol.

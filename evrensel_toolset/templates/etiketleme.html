@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Detect Etiketleme Arayüzü</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section id="yukleme-ekrani" class="yukleme-ekrani">
+    <h1>Detect Etiketleme Arayüzü</h1>
+    <p class="aciklama">
+      Klasör/dosya yollarını elle yazmana gerek yok — aşağıdaki butonlar
+      gerçek Windows klasör/dosya seçme penceresini açar. Etiket klasörü
+      ve data.yaml opsiyonel: boş bırakırsan görsel klasörünün yanında
+      "labels" klasörü ve "data.yaml" otomatik varsayılır/oluşturulur.
+    </p>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>Görsel Klasörü</strong> <span class="zorunlu">(zorunlu)</span>
+        <div class="secili-yol" id="gorsel_klasoru_goster">— seçilmedi —</div>
+      </div>
+      <button type="button" class="klasor-sec-btn" data-hedef="gorsel_klasoru">KLASÖR SEÇ</button>
+    </div>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>Etiket Klasörü</strong> <span class="opsiyonel">(opsiyonel)</span>
+        <div class="secili-yol" id="etiket_klasoru_goster">— seçilmedi (otomatik: 'labels') —</div>
+      </div>
+      <button type="button" class="klasor-sec-btn" data-hedef="etiket_klasoru">KLASÖR SEÇ</button>
+    </div>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>data.yaml</strong> <span class="opsiyonel">(opsiyonel)</span>
+        <div class="secili-yol" id="data_yaml_goster">— seçilmedi (otomatik aranacak) —</div>
+      </div>
+      <button type="button" class="dosya-sec-btn" data-hedef="data_yaml">DOSYA SEÇ</button>
+    </div>
+
+    <label class="siniflar-label">Class'lar <span class="opsiyonel">(yazarsan var olan data.yaml'dan ÖNCELİKLİDİR)</span>
+      <input type="text" id="siniflar" placeholder="ör: kedi,kopek,kus ya da sinif1,sinif2,sinif3">
+    </label>
+
+    <button type="button" id="yukle-btn" class="yukle-btn">PROJEYİ YÜKLE</button>
+    <p id="yukleme-hata" class="hata"></p>
+  </section>
+
+  <section id="ana-ekran" class="ana-ekran gizli">
+    <aside class="sol-panel">
+      <h3>Class'lar</h3>
+      <ul id="sinif-listesi"></ul>
+      <p class="ipucu">Rakam tuşlarıyla (1,2,3...) aktif class'ı seç, sonra
+        görsel üzerinde fare ile sürükleyerek kutu çiz.<br><br>
+        <strong>Ctrl + fare tekerleği:</strong> yakınlaştır/uzaklaştır
+        (fare imlecine göre).<br>
+        <strong>Orta tuş sürükle:</strong> görselde gezin (pan).<br>
+        <strong>Sol tık (kutu üstü):</strong> kutuyu seç.<br>
+        <strong>Sağ tık (kutu üstü):</strong> kutuyu direkt sil.<br>
+        <strong>Yanlış etiketlenmiş kutu:</strong> alttaki "Bu görseldeki
+        kutular" listesinden dropdown ile doğru class'ı seç, ya da kutuyu
+        seçip (sol tık) bir rakam tuşuna bas.<br>
+        <strong>R:</strong> yakınlaştırmayı sıfırla (görseli pencereye sığdır).<br>
+        <strong>Delete/Backspace:</strong> seçili kutuyu sil.<br>
+        <strong>← →:</strong> önceki/sonraki görsel.<br>
+        <strong>Numpad 1 / . (nokta):</strong> bu görseli "sonra tekrar
+        kontrol et" diye işaretle/kaldır (listede kırmızı nokta olarak
+        görünür).<br>
+        <strong>Shift + Delete / L:</strong> bu görseli kalıcı sil (fare
+        gerekmez, açılan pencerede Enter = sil, Esc = vazgeç).</p>
+      <p class="ilerleme-kutusu" id="ilerleme">Etiketlenen: 0 / 0</p>
+    </aside>
+
+    <main class="orta-panel">
+      <div class="aktif-sinif-bar" id="aktif-sinif-bar">Aktif class: —</div>
+      <div class="ust-bar">
+        <button id="onceki-btn">&lt; Önceki</button>
+        <span id="sayac">0 / 0</span>
+        <button id="sonraki-btn">Sonraki &gt;</button>
+        <button id="kaydet-btn">Kaydet</button>
+        <span id="kayit-durumu"></span>
+        <button id="gorsel-sil-btn" class="gorsel-sil-btn">Görseli Sil</button>
+        <button id="klasor-degistir-btn" class="klasor-degistir-btn">Klasör Değiştir</button>
+      </div>
+      <div class="canvas-sarici">
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="kutu-listesi">
+        <h4>Bu görseldeki kutular</h4>
+        <ul id="kutular-ul"></ul>
+      </div>
+    </main>
+
+    <aside class="sag-panel">
+      <h3>Görseller</h3>
+      <ul id="gorsel-listesi"></ul>
+    </aside>
+  </section>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

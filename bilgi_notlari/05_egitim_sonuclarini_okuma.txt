@@ -1,0 +1,33 @@
+EĞİTİM SONUÇLARINDAKİ SAYILAR NE ANLAMA GELİYOR
+
+Precision (P): Model "bu X'tir" dediğinde ne kadarında haklı çıkıyor.
+  Örnek: 0.969 -> tahminlerin %97'si doğru, yanlış alarm az.
+
+Recall (R): Gerçekte var olan nesnelerin ne kadarını model YAKALAYABİLİYOR.
+  Örnek: 0.963 -> var olan araçların %96'sını buluyor, kaçırma azdır.
+
+mAP50: Kutu konumu biraz kayık olsa bile (kutu ile gerçek nesne en az
+  %50 üst üste binerse doğru sayılır), genel doğruluk skoru.
+
+mAP50-95: Daha katı bir ölçüm — kutunun ne kadar HASSAS çizildiğini de
+  değerlendiriyor (%50'den %95'e kadar farklı örtüşme eşiklerinin
+  ortalaması). mAP50'den her zaman düşük ya da eşittir.
+
+Epoch: Modelin TÜM eğitim verisini bir baştan sona görmesi = 1 epoch.
+  100 epoch = veriyi 100 kez baştan sona görüp ağırlıkları güncelledi.
+
+DİKKAT: Bu sayılar sadece VAL setinde ölçülür. Val seti küçükse (örnek:
+23 görsel, bir sınıfta sadece 3 örnek), TEK bir yanlış tahmin bile skoru
+büyük oynatır. Yüksek sayılar (mAP50 ~0.99 gibi) her zaman "model harika"
+demek değildir — bazen "veri seti küçük ve val, train'e çok benziyor,
+henüz gerçek çeşitlilikle test edilmedi" anlamına da gelebilir. Gerçek
+sınav, modelin HİÇ görmediği, farklı kaynaklı yeni görsellerle yapılan
+elle testtir (bkz. Model Test arayüzü, henüz yapılmadı).
+
+confusion (yanlış anlama) örneği: Model bazen aynı nesne için birden fazla
+sınıfa aynı anda kutu çizebilir (örn. hem "egea 0.54" hem "clio4 0.53").
+Bunun sebebi: YOLO'nun üst üste binen kutuları eleme mantığı (NMS)
+VARSAYILAN olarak SINIF BAZINDA çalışır — yani iki FARKLI sınıf aynı
+nesneyi işaret ediyorsa, ikisi de "ayrı yarış" olduğu için hayatta
+kalabilir. Bu durum, modelin o nesne konusunda GERÇEKTEN kararsız
+olduğunun işaretidir.

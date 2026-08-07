@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Çalışma zamanı çıktıları (yeniden üretilebilir, birikip büyüyor)
+etiketleme_arayuzu/static/fusion_ciktilari/
+etiketleme_arayuzu/static/test_ciktilari/
+etiketleme_arayuzu/static/augment_onizleme/
+evrensel_toolset/static/fusion_ciktilari/
+evrensel_toolset/static/test_ciktilari/
+evrensel_toolset/static/augment_onizleme/
+kod/*_ciktilari/
+
+# Veritabanı ve tek-çalıştırma kayıtları (kişisel/yerel veri, paylaşılmaz)
+db/*.db
+kayitlar/*.json
+
+# Büyük, yeniden üretilebilir eğitim çıktıları (100MB GitHub sınırına
+# takılabilecek dosyalar burada olabilir; sadece en son/final ağırlığı
+# elle ekleyip istersen bunu gevşetebilirsin)
+runs/
+
+# Bölünmüş veri kopyaları (kaynak zaten images/+labels/'de var, split/
+# bunun byte-byte kopyası, gereksiz yere depoyu şişirir)
+veri/split/
+
+# Ham görsel/etiket veri setleri (binlerce küçük dosya -- git bunun için
+# uygun bir araç değil, hem depoyu şişirir hem her işlemi yavaşlatır.
+# Kod ve config (data.yaml) izleniyor, GÖRSELLER izlenmiyor.)
+veri/images/
+veri/labels/
+veri/kaynak_gorseller/
+veri/augments/
+veri/arabalar4tur/
+test edilecekler/
+
+# Editör/OS
+.vscode/
+.DS_Store
+Thumbs.db

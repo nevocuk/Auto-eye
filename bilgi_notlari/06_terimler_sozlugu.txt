@@ -1,0 +1,35 @@
+KISA TERİMLER SÖZLÜĞÜ
+
+Detect: Görselde nesnelerin YERİNİ (kutu) ve SINIFINI birlikte bulan
+  YOLO görevi. Aynı görselde birden fazla nesne olabilir.
+
+Classify: Görselin BÜTÜNÜNE tek bir etiket veren görev (nesne yeri yok).
+  Bu projede kullanılmıyor, detect'e geçildi (çoklu araç sahnesi ve ortak
+  etiketleme aracı kullanımı için).
+
+Class (sınıf): Modelin ayırt etmeye çalıştığı kategori (renault_clio3,
+  renault_clio4, fiat_egea gibi).
+
+Bounding box (kutu): Bir nesnenin etrafına çizilen dikdörtgen, YOLO detect
+  formatında normalize edilmiş (0-1 arası) x_merkez, y_merkez, genişlik,
+  yükseklik olarak saklanır.
+
+Epoch: Modelin tüm eğitim verisini bir kez baştan sona görmesi.
+
+Fine-tune (ince ayar): Hazır (önceden eğitilmiş) bir modeli, kendi özel
+  veriyle güncelleyerek yeni bir göreve uyarlamak. Bkz. 02_yolo_ve_transfer_learning.txt
+
+Overfitting (ezberleme): Modelin eğitim verisine has küçük detayları
+  ezberleyip, hiç görmediği yeni verilerde genelleyememesi.
+
+mAP (mean Average Precision): Modelin genel doğruluğunu tek bir sayıya
+  indirgeyen ölçüm. Bkz. 05_egitim_sonuclarini_okuma.txt
+
+NMS (Non-Max Suppression): Aynı nesne için üretilen, üst üste binen
+  fazla kutuları eleyip en iyisini bırakan mekanizma.
+
+Confidence (güven skoru): Modelin bir tahmine ne kadar "emin" olduğunu
+  gösteren 0-1 arası sayı.
+
+data.yaml: Veri setinin sınıf listesini ve klasör yollarını tanımlayan
+  ayar dosyası. Bkz. 01_data_yaml_nedir.txt

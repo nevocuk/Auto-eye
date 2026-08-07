@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Model Eğitimi</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani genis">
+    <h1>Model Eğitimi</h1>
+    <p class="aciklama">
+      Bir başlangıç modeli (transfer learning için önceden eğitilmiş
+      yolo11n.pt gibi, ya da devam etmek istediğin bir last.pt) ve bir
+      data.yaml seçip eğitimi buradan başlatırsın. Eğitim GPU/CPU'nda
+      (bu bilgisayarda) çalışır, epoch bittikçe metrikler sağdaki kutuda
+      canlı olarak güncellenir. Fine-tuning istemiyorsan (yani hazır
+      COCO ağırlıklarından değil, tamamen SIFIRDAN/rastgele ağırlıklarla
+      eğitmek istersen) ".pt" yerine ".yaml" uzantılı bir mimari dosyası
+      yazman yeterli (ör. "yolo11n.yaml") -- ultralytics bunu otomatik
+      olarak "önceden eğitilmemiş" model olarak yorumlar.
+    </p>
+
+    <div class="egitim-grid">
+      <div class="egitim-sol">
+        <div class="augment-mod-satiri">
+          <label><input type="radio" name="egitim_mod" value="yeni" checked> Yeni Eğitim</label>
+          <label><input type="radio" name="egitim_mod" value="devam"> Var Olan Eğitime Devam Et (last.pt'den)</label>
+        </div>
+
+        <!-- ================= DEVAM ET MODU ================= -->
+        <div id="devam-et-alanlari" class="gizli">
+          <div class="secim-satiri">
+            <div class="secim-etiket">
+              <strong>last.pt Dosyası</strong> <span class="zorunlu">(zorunlu)</span>
+              <div class="secili-yol" id="last_pt_dosyasi_goster">— seçilmedi —</div>
+            </div>
+            <button type="button" class="dosya-sec-btn" data-hedef="last_pt_dosyasi" data-tur="model">DOSYA SEÇ</button>
+          </div>
+          <p class="aciklama" style="margin-top:0">
+            Yarıda kalan (kesilen/durdurulan) bir eğitimin
+            <code>weights/last.pt</code> dosyasını seç — eğitim, o
+            çalışmanın kendi kayıtlı ayarlarıyla (data.yaml, epochs, tüm
+            parametreler) kaldığı epoch'tan devam eder. Aşağıdaki diğer
+            alanların hiçbiri bu modda kullanılmaz.
+          </p>
+        </div>
+
+        <!-- ================= YENİ EĞİTİM MODU ================= -->
+        <div id="yeni-egitim-alanlari">
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Başlangıç Modeli</strong> <span class="opsiyonel">(opsiyonel — hiçbir şey seçmezsen "yolo11n.pt" kullanılır)</span>
+            <div class="secili-yol" id="model_dosyasi_goster">— seçilmedi (varsayılan: yolo11n.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="model_dosyasi">DOSYA SEÇ</button>
+        </div>
+        <label class="siniflar-label">Veya model adı yaz <span class="opsiyonel">(diskte yoksa otomatik indirilir, örn. yolo11n.pt / yolo11n-seg.pt / yolo11n-pose.pt / yolo11n.yaml)</span>
+          <input type="text" id="model_adi_yaz" placeholder="boş bırakırsan: yolo11n.pt">
+        </label>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>data.yaml</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="data_yaml_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="data_yaml">DOSYA SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Çıktı (run) Klasörü</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="proje_klasoru_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="klasor-sec-btn" data-hedef="proje_klasoru">KLASÖR SEÇ</button>
+        </div>
+
+        <label class="siniflar-label">Çalışma adı
+          <input type="text" id="calisma_adi" value="egitim1">
+        </label>
+
+        <table class="augment-tablo">
+          <thead><tr><th>Parametre</th><th>Değer</th><th>Açıklama</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Epochs</td>
+              <td><input type="number" id="epochs" value="100" min="1"></td>
+              <td class="aciklama-hucre">Veri setinin kaç kez baştan sona görüleceği</td>
+            </tr>
+            <tr>
+              <td>Image size</td>
+              <td><input type="number" id="imgsz" value="640" step="32" min="32"></td>
+              <td class="aciklama-hucre">Görsellerin eğitim için yeniden boyutlandırılacağı piksel</td>
+            </tr>
+            <tr>
+              <td>Batch</td>
+              <td><input type="number" id="batch" value="16" min="1"></td>
+              <td class="aciklama-hucre">Her adımda birlikte işlenen görsel sayısı (GPU belleğine göre düşür/artır)</td>
+            </tr>
+            <tr>
+              <td>Patience</td>
+              <td><input type="number" id="patience" value="100" min="1"></td>
+              <td class="aciklama-hucre">Bu kadar epoch boyunca gelişme olmazsa eğitim otomatik durur</td>
+            </tr>
+            <tr>
+              <td>Optimizer</td>
+              <td>
+                <select id="optimizer">
+                  <option value="auto">auto</option>
+                  <option value="SGD">SGD</option>
+                  <option value="Adam">Adam</option>
+                  <option value="AdamW">AdamW</option>
+                </select>
+              </td>
+              <td class="aciklama-hucre">Ağırlıkların nasıl güncelleneceği, "auto" genelde yeterli</td>
+            </tr>
+            <tr>
+              <td>Device</td>
+              <td>
+                <select id="device">
+                  <option value="">otomatik</option>
+                  <option value="0">GPU (0)</option>
+                  <option value="cpu">CPU</option>
+                </select>
+              </td>
+              <td class="aciklama-hucre">GPU'n varsa "GPU (0)" seç, yoksa CPU</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <button type="button" id="gelismis-toggle-btn" class="klasor-degistir-btn-duz">Gelişmiş Ayarlar (loss ağırlıkları / augmentation) &#9662;</button>
+        <p class="opsiyonel" style="margin:4px 0 10px">
+          Buradakiler ultralytics'in eğitim sırasında ZATEN otomatik
+          uyguladığı varsayılan değerler — hiçbirine dokunmazsan davranış
+          hiç değişmez. Bilerek denemek istediğinde ayarla.
+        </p>
+        <table class="augment-tablo gizli" id="gelismis-tablo">
+          <thead><tr><th>Parametre</th><th>Değer</th><th>Açıklama</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>cls (class ağırlığı)</td>
+              <td><input type="number" id="cls" value="0.5" step="0.1" min="0"></td>
+              <td class="aciklama-hucre">Sınıflandırma hatasının önemi — birbirine çok benzeyen sınıflar arasında ince ayrım zorsa artır (örn. 1.0-1.5)</td>
+            </tr>
+            <tr>
+              <td>box (kutu ağırlığı)</td>
+              <td><input type="number" id="box" value="7.5" step="0.5" min="0"></td>
+              <td class="aciklama-hucre">Kutu konumu hatasının önemi</td>
+            </tr>
+            <tr>
+              <td>dfl</td>
+              <td><input type="number" id="dfl" value="1.5" step="0.1" min="0"></td>
+              <td class="aciklama-hucre">Kutu kenarı hassasiyeti hatasının önemi</td>
+            </tr>
+            <tr>
+              <td>fl_gamma (focal loss)</td>
+              <td><input type="number" id="fl_gamma" value="0" step="0.1" min="0"></td>
+              <td class="aciklama-hucre">0=kapalı; artırınca (örn. 1.5-2) model zor/az görülen class'lara daha çok odaklanır (class dengesizliği için)</td>
+            </tr>
+            <tr>
+              <td>mosaic</td>
+              <td><input type="number" id="mosaic" value="1.0" step="0.1" min="0" max="1"></td>
+              <td class="aciklama-hucre">4 görseli birleştirip tek karede eğitme olasılığı, 0=kapalı</td>
+            </tr>
+            <tr>
+              <td>erasing</td>
+              <td><input type="number" id="erasing" value="0.4" step="0.05" min="0" max="1"></td>
+              <td class="aciklama-hucre">Rastgele bir bölgeyi silme (pixel bazlı) oranı — kısmen kapanmış/örtülmüş nesnelere karşı dayanıklılık</td>
+            </tr>
+            <tr>
+              <td>hsv_h</td>
+              <td><input type="number" id="hsv_h" value="0.015" step="0.005" min="0"></td>
+              <td class="aciklama-hucre">Renk tonu (hue) rastgele kayma miktarı</td>
+            </tr>
+            <tr>
+              <td>hsv_s</td>
+              <td><input type="number" id="hsv_s" value="0.7" step="0.05" min="0"></td>
+              <td class="aciklama-hucre">Doygunluk rastgele kayma miktarı</td>
+            </tr>
+            <tr>
+              <td>hsv_v</td>
+              <td><input type="number" id="hsv_v" value="0.4" step="0.05" min="0"></td>
+              <td class="aciklama-hucre">Parlaklık rastgele kayma miktarı</td>
+            </tr>
+            <tr>
+              <td>degrees</td>
+              <td><input type="number" id="degrees" value="0" step="1" min="0"></td>
+              <td class="aciklama-hucre">Rastgele döndürme (derece), 0=kapalı</td>
+            </tr>
+            <tr>
+              <td>translate</td>
+              <td><input type="number" id="translate" value="0.1" step="0.05" min="0"></td>
+              <td class="aciklama-hucre">Rastgele kaydırma oranı</td>
+            </tr>
+            <tr>
+              <td>scale</td>
+              <td><input type="number" id="scale" value="0.5" step="0.05" min="0"></td>
+              <td class="aciklama-hucre">Rastgele yakınlaştırma/uzaklaştırma oranı</td>
+            </tr>
+            <tr>
+              <td>shear</td>
+              <td><input type="number" id="shear" value="0" step="0.5" min="0"></td>
+              <td class="aciklama-hucre">Rastgele eğme (derece), 0=kapalı</td>
+            </tr>
+            <tr>
+              <td>perspective</td>
+              <td><input type="number" id="perspective" value="0" step="0.0001" min="0"></td>
+              <td class="aciklama-hucre">Rastgele perspektif bozma, 0=kapalı</td>
+            </tr>
+            <tr>
+              <td>flipud</td>
+              <td><input type="number" id="flipud" value="0" step="0.1" min="0" max="1"></td>
+              <td class="aciklama-hucre">Görseli dikey çevirme olasılığı</td>
+            </tr>
+            <tr>
+              <td>fliplr</td>
+              <td><input type="number" id="fliplr" value="0.5" step="0.1" min="0" max="1"></td>
+              <td class="aciklama-hucre">Görseli yatay çevirme olasılığı</td>
+            </tr>
+            <tr>
+              <td>mixup</td>
+              <td><input type="number" id="mixup" value="0" step="0.1" min="0" max="1"></td>
+              <td class="aciklama-hucre">İki görseli karıştırma olasılığı, 0=kapalı</td>
+            </tr>
+            <tr>
+              <td>copy_paste</td>
+              <td><input type="number" id="copy_paste" value="0" step="0.1" min="0" max="1"></td>
+              <td class="aciklama-hucre">Bir nesneyi başka görsele kopyala-yapıştır olasılığı, 0=kapalı</td>
+            </tr>
+            <tr>
+              <td>cutmix</td>
+              <td><input type="number" id="cutmix" value="0" step="0.1" min="0" max="1"></td>
+              <td class="aciklama-hucre">Başka bir görselden dikdörtgen bir parça yapıştırır (kutunun önüne bir şey gelmiş gibi kısmi kapanma simüle eder) — nesnenin önüne başka bir nesne/engel girmesi durumuna karşı dayanıklılık için kullanışlı, 0=kapalı</td>
+            </tr>
+            <tr>
+              <td>bgr</td>
+              <td><input type="number" id="bgr" value="0" step="0.1" min="0" max="1"></td>
+              <td class="aciklama-hucre">Kırmızı/mavi kanalları rastgele takas etme olasılığı — kamera renk kalibrasyonu farklarına karşı ufak bir dayanıklılık, 0=kapalı (genelde 0 kalabilir)</td>
+            </tr>
+            <tr>
+              <td>close_mosaic</td>
+              <td><input type="number" id="close_mosaic" value="10" step="1" min="0"></td>
+              <td class="aciklama-hucre">Eğitimin SON bu kadar epoch'unda mosaic'i otomatik kapatır — 4 görseli birleştirmek gerçekçi olmayan sahneler yaratabildiği için, bitişe yakın modelin gerçek/tek görsellere ince ayar yapması sağlanır</td>
+            </tr>
+            <tr>
+              <td>multi_scale</td>
+              <td><input type="checkbox" id="multi_scale"></td>
+              <td class="aciklama-hucre">Eğitim sırasında görsel boyutunu rastgele küçültüp büyütür — kamerada yakın/uzak (büyük/küçük görünen) nesneleri birbirinden ayırt etmede işe yarar, ama eğitimi yavaşlatır</td>
+            </tr>
+            <tr>
+              <td>freeze</td>
+              <td><input type="number" id="freeze" placeholder="boş = kapalı" min="0"></td>
+              <td class="aciklama-hucre">Modelin ilk N katmanını dondurur (değiştirmez) — transfer learning'de genel nesne bilgisini koruyup sadece son katmanların ince class farklarını (ör. köpek ırkları, ürün varyantları) öğrenmesini sağlar, özellikle az veriyle aşırı öğrenmeyi (overfitting) azaltabilir. Boş bırakırsan kapalı.</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+
+        <button type="button" id="baslat-btn" class="yukle-btn">EĞİTİMİ BAŞLAT</button>
+        <p id="egitim-hata" class="hata"></p>
+      </div>
+
+      <div class="egitim-sag">
+        <div id="durum-satiri" class="onizleme-kutusu gizli"></div>
+
+        <div class="kutu-baslik-satiri">
+          <span></span>
+          <button type="button" id="log-kopyala-btn" class="kopyala-btn gizli">Kopyala</button>
+        </div>
+        <pre id="egitim-log" class="analiz-kutusu gizli"></pre>
+
+        <div id="egitim-grafikler" class="egitim-grafik-izgara gizli">
+          <div class="egitim-grafik-sutun">
+            <div class="augment-onizleme-etiket">Kayıp/metrik eğrileri (results.png)</div>
+            <img id="grafik-results" alt="Eğitim sonuç eğrileri">
+          </div>
+          <div class="egitim-grafik-sutun">
+            <div class="augment-onizleme-etiket">Karışıklık matrisi (confusion matrix)</div>
+            <img id="grafik-confusion" alt="Karışıklık matrisi">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/static/egitim.js"></script>
+</body>
+</html>

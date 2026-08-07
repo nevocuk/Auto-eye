@@ -1,0 +1,32 @@
+KLASÖR YAPISI — NE NEREDE DURUYOR, NEYE DOKUNULMAZ
+
+otopark/
+  veri/
+    images/              <- TÜM etiketlenmiş görseller burada (tek klasör,
+                             sınıf klasörlere ayrılmıyor artık — detect'e
+                             geçince sınıf ayrımı klasörle değil, etiket
+                             dosyasındaki sınıf ID'siyle yapılıyor)
+    labels/               <- Her görselin etiketi (aynı isimde .txt dosyası)
+                             OTOMATİK yazılıyor, elle dokunma
+    data.yaml             <- Sınıf listesi + yol tanımı (aşağıda ayrıntılı
+                             anlatılıyor), OTOMATİK güncelleniyor
+    split/                <- Dataset Splitter çıktısı (train/val/test'e
+                             bölünmüş hali), her seferinde yeniden
+                             üretilebilir, elle dokunmana gerek yok
+      images/train, images/val, images/test
+      labels/train, labels/val, labels/test
+      data.yaml           <- split'e özel, kendi train/val/test yollarını
+                             gösteren AYRI bir data.yaml
+      analiz.txt          <- bölünme raporu
+
+  kod/                    <- plaka tespiti, OCR, veri birleştirme script'leri
+  etiketleme_arayuzu/      <- Toolset (etiketleme + splitter + augment) uygulaması
+
+NOT: eskiden "renault_clio3/", "renault_clio4/", "fiat_egea/" gibi ayrı
+klasörler kullanılıyordu (o zamanki classify yaklaşımının kalıntısı).
+Artık kullanılmıyor, detect'e geçince hepsi tek "images/" + "labels/" içinde.
+
+Genel kural: "images/" ve "labels/" klasörlerinin İÇİNDEKİ dosyalara elle
+dokunma (araçlar otomatik yönetiyor) — ama görsel EKLEMEK istersen (yeni
+fotoğraf), images/ klasörüne görseli atıp Etiketleme arayüzünden
+etiketleyebilirsin, bu normal kullanım.

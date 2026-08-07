@@ -1,0 +1,593 @@
+TEKNİK REFERANS — PROJEDE HERŞEY NASIL ÇALIŞIYOR
+(Bu dosya "08_arayuz_araclari_rehberi.txt"nin yüzeysel özetinin bir üst
+seviyesi — burada data.yaml'ın içine ne yazıldığı, etiket dosya formatı,
+augment/eğitim parametrelerinin TEK TEK ne yaptığı, ve kodda bilinmesi
+gereken kurallar var. Başka biri (ya da ileride kendiniz) projeye hızlı
+adapte olmak isterse bu dosyayı baştan sona okuması yeterli olmalı.)
+
+===============================================================
+1) GENEL MİMARİ (özet — detay için 08 numaralı dosya)
+===============================================================
+Toolset (etiketleme_arayuzu/) bir Flask web sunucusu + pywebview native
+pencere kombinasyonu. app.py = backend (tüm iş mantığı, dosya okuma/
+yazma, model çalıştırma burada). templates/*.html = her aracın arayüzü.
+static/*.js = tıklama/etkileşim mantığı. Native pencere kullanma sebebi:
+kullanıcının bilgisayarındaki KEYFİ bir klasörü okuyup yazabilmek
+(normal tarayıcı güvenliği bunu engeller).
+
+===============================================================
+2) KLASÖR YAPISI (özet — detay için 00 numaralı dosya)
+===============================================================
+veri/images/  + veri/labels/  = tüm etiketli ham veri (tek klasör,
+sınıf ayrımı klasörle değil etiket dosyasındaki sınıf ID'siyle yapılıyor)
+veri/data.yaml = sınıf listesi (aşağıda detaylı)
+veri/split/    = Dataset Splitter çıktısı (train/val/test), her seferinde
+                 yeniden üretilebilir, elle dokunulmaz
+
+===============================================================
+3) data.yaml FORMATI — İÇİNE NE YAZILIYOR, NEDEN
+===============================================================
+Örnek içerik:
+  train: images/train
+  val: images/val
+  test: images/test
+  names:
+    0: renault_clio3
+    1: renault_clio4
+    2: fiat_egea
+    3: renault_megane
+
+ÖNEMLİ KURALLAR:
+- "path" anahtarı BİLEREK yazılmıyor. Yazılsaydı, ultralytics train/val
+  yollarını yaml dosyasının bulunduğu klasöre göre değil, o an
+  çalışan sürecin (process) cwd'sine göre arardı — bu yanlış klasörde
+  arama yapılmasına yol açabiliyordu. "path" olmadan ultralytics
+  otomatik olarak yaml'ın kendi konumuna göre train/val/test yollarını
+  çözüyor.
+- "names" içindeki sayısal ID'ler (0, 1, 2...) ETİKET DOSYALARINDAKİ
+  (.txt) ilk sütunla birebir eşleşiyor. Bu ID'ler SIRALAMA/ANLAM olarak
+  ASLA silinmez, değiştirilmez, yeniden sıralanmaz — çünkü tüm eski
+  etiket dosyaları o sıralamaya göre yazılmış durumda. Bir ID'nin
+  anlamını değiştirmek (örn. 2'yi "egea" yerine "megane" yapmak) TÜM
+  eski etiketleri sessizce bozar. Yeni bir sınıf eklenmesi gerekiyorsa
+  sadece LİSTENİN SONUNA eklenir, var olanlara dokunulmaz. Bu yüzden
+  Etiketleme ve Ön-Etiketleme arayüzlerinde yeni sınıf eklemek her
+  zaman kullanıcı onayı gerektiren ayrı bir adım.
+- Veri Birleştir aracı KENDİ data.yaml'ını ÜRETMEZ — çalışması için tüm
+  kaynak klasörlerin AYNI, TEK bir master data.yaml'ı paylaşıyor olması
+  gerekiyor (aksi halde farklı klasörlerde aynı sayısal ID farklı
+  sınıflara denk gelebilir, birleşince etiketler sessizce karışır).
+
+===============================================================
+4) YOLO ETİKET DOSYASI FORMATI (.txt)
+===============================================================
+Her görselin (örn. araba1.jpg) yanında aynı isimde bir .txt dosyası var
+(araba1.txt), labels/ klasöründe. Her satır bir kutu:
+
+  <class_id> <x_center> <y_center> <width> <height>
+
+- class_id: data.yaml'daki "names" sırasına göre tam sayı (0, 1, 2...)
+- x_center, y_center, width, height: görsel boyutuna göre NORMALİZE
+  edilmiş (0 ile 1 arası) değerler — piksel değil oran. Bu yüzden
+  görsel boyutunun ne olduğu etiketi bozmaz (görsel yeniden
+  boyutlandırılsa bile kutu oranı aynı kalır).
+- Boş bir .txt dosyası ya da hiç .txt olmaması = "bu görselde etiketli
+  hiçbir şey yok" anlamına geliyor, Splitter/Augment gibi araçlar bu
+  görselleri "eksik etiket" sayıp bölümlere dahil etmiyor (data.yaml'a
+  hiç etki etmiyor).
+
+===============================================================
+5) DATA AUGMENT ARACI — NE YAPIYOR, NASIL ÇALIŞIYOR
+===============================================================
+Konum: templates/augment.html, static/augment.js, app.py'de
+_augment_uygula() + augment_calistir() route'u.
+
+Bu araç OFFLINE çalışıyor: var olan etiketli bir görseli PIL (Pillow)
+ile işleyip DİSKE YENİ bir dosya (görsel + aynı etiket kopyası) yazıyor.
+Kutu KONUMU hiç değişmiyor çünkü uygulanan teknikler geometriyi değil
+sadece renk/netlik/görünümü değiştiriyor.
+
+Şu an var olan 4 teknik:
+- parlaklık (ImageEnhance.Brightness)
+- keskinlik (ImageEnhance.Sharpness)
+- blur (ImageFilter.GaussianBlur)
+- gölge (özel _golge_ekle fonksiyonu, görsele yarı saydam koyu katman)
+
+İki mod var: "sabit" (her görselden 1 tane, sabit değerle) ve "dinamik"
+(taban-hedef aralığında rastgele değer, her görselden N tane).
+
+Dosya adlandırma kuralı ÖNEMLİ: üretilen dosya adına hangi tekniklerin
+uygulandığı kısaltmayla ekleniyor (_augp = parlaklık, _augb = blur vs).
+Bunun sebebi yaşanmış bir hata: aynı çıktı klasörüne önce "sadece blur"
+sonra "sadece parlaklık" ile ayrı ayrı çalıştırılınca, ikisi de aynı adı
+üretip birbirinin üzerine sessizce yazıyordu. Artık farklı teknik
+kombinasyonları farklı isim aldığı için çakışmıyor.
+
+KURAL: Augment SADECE train klasörüne uygulanmalı, val/test'e asla —
+yoksa model "gördüğü" veriyle test edilmiş olur, sonuçlar yanıltıcı
+çıkar (gerçek performansı yansıtmaz).
+
+HENÜZ EKLENMEDİ ama konuşuldu (istenirse eklenebilir):
+- kontrast (ImageEnhance.Contrast) — kolay, mevcutlarla aynı desen
+- gürültü (Gaussian noise) — düşük ışık/gece kamera görüntüsünü taklit
+- JPEG sıkıştırma artığı — gerçek video/kamera kaydındaki bozulmayı
+  taklit eder, projenin gerçek dağıtım ortamına (güvenlik kamerası)
+  en çok uyan iki teknik gürültü ve sıkıştırma.
+
+===============================================================
+6) MODEL EĞİTİMİ — "GELİŞMİŞ AYARLAR" PARAMETRELERİ
+===============================================================
+Konum: templates/egitim.html, static/egitim.js, app.py'de
+_egitimi_baslat_arka_planda() (model.train() çağrısı burada).
+
+ÖNEMLİ FARK: Augment aracı diske yeni dosya yazar (kalıcı, elle
+görülebilir). Buradaki parametreler ise ultralytics'in EĞİTİM SIRASINDA
+anlık/geçici olarak uyguladığı augmentation'lar — diske hiçbir şey
+yazılmaz, her epoch farklı rastgele varyasyon üretilir. İkisi birbirini
+DEĞİL, birbirini TAMAMLIYOR.
+
+Kayıp (loss) ağırlıkları — "hangisine ne kadar önem versin":
+- cls (varsayılan 0.5): sınıflandırma hatasının önemi — "hangi class"
+  sorusuna karşılık gelir. BİZİM PROJEDE EN ÖNEMLİSİ BU, çünkü sorunumuz
+  "kutu nerede" değil "bu hangi model" (clio3 mü clio4 mü). İnce ayrım
+  zorsa 1.0-1.5'e çıkarmak mantıklı.
+- box (varsayılan 7.5): kutunun KONUM doğruluğunun önemi — "nerede"
+  sorusuna karşılık gelir. Bizim asıl sorunumuz bu değil.
+- dfl (varsayılan 1.5): kutu kenarı hassasiyeti, box ile ilişkili.
+- fl_gamma (varsayılan 0, focal loss): 0=kapalı. Artırılırsa (1.5-2)
+  model az görülen/zor class'lara daha çok odaklanır — veri dengesizliği
+  (örn. egea verisi az, clio4 verisi çok) varsa işe yarar.
+
+Geometrik/renk augmentation'ları (eğitim sırasında anlık uygulanır):
+- hsv_h/hsv_s/hsv_v: renk tonu/doygunluk/parlaklık rastgele kayması
+- degrees/shear/perspective: döndürme/eğme/perspektif bozma
+- translate/scale: kaydırma/yakınlaştırma
+- flipud/fliplr: dikey/yatay çevirme
+- erasing (varsayılan 0.4): rastgele bir bölgeyi silme (pixel bazlı) —
+  kısmen kapanmış araçlara dayanıklılık için
+- mosaic (varsayılan 1.0): 4 görseli birleştirip tek karede eğitme
+- mixup (varsayılan 0): iki görseli karıştırma
+- copy_paste (varsayılan 0): bir nesneyi başka görsele kopyala-yapıştır
+
+YENİ EKLENENLER (bu oturumda):
+- cutmix (varsayılan 0): başka görselden dikdörtgen bir parça yapıştırır
+  — "kutunun önüne bir şey gelmiş" gibi kısmi kapanma simüle eder,
+  otoparkta bir aracın önünden başka araç/direk geçmesi durumuna
+  dayanıklılık için mantıklı.
+- bgr (varsayılan 0): kırmızı/mavi kanal takası — düşük öncelik, kamera
+  renk kalibrasyonu farkına karşı ufak katkı.
+- close_mosaic (varsayılan 10): eğitimin SON N epoch'unda mosaic'i
+  otomatik kapatır — bitişe yakın model gerçek/tek görsellere ince ayar
+  yapsın diye (mosaic'in yarattığı gerçekçi olmayan sahnelerden uzaklaşma).
+- multi_scale (varsayılan kapalı, checkbox): eğitim sırasında görsel
+  boyutunu rastgele büyütüp küçültür — kamerada yakın/uzak (büyük/küçük
+  görünen) araçları ayırt etmede işe yarar, ama eğitimi yavaşlatır.
+- freeze (varsayılan boş=kapalı): modelin ilk N katmanını dondurur
+  (transfer learning) — genel "araç" bilgisini koruyup sadece son
+  katmanların ince class farklarını öğrenmesini sağlar, az veriyle
+  aşırı öğrenmeyi (overfitting) azaltabilir.
+
+Neden cutmix/mosaic/mixup/copy_paste burada, Augment aracında değil:
+bunlar birden fazla görseli aynı anda birleştirip etiketleri OTOMATİK
+yeniden hesaplıyor (karmaşık, hataya açık bir iş) — ultralytics bunu
+test edilmiş/güvenli şekilde zaten yapıyor, offline araçta yeniden
+yazmak gereksiz risk taşır.
+
+===============================================================
+7) DEVAM ET (RESUME) MEKANİZMASI
+===============================================================
+"Var Olan Eğitime Devam Et" modu last.pt dosyasını seçtirip
+model.train(resume=True) çağırıyor — BAŞKA HİÇBİR parametre
+göndermiyoruz, çünkü resume=True ultralytics'e o çalışmanın kendi
+kayıtlı ayarlarını (args.yaml, aynı data.yaml/epochs/tüm parametreler)
+OTOMATİK okumasını söylüyor. Bu, YARIDA KESİLMİŞ aynı eğitimi kaldığı
+epoch'tan devam ettirmek için — YENİ bir eğitime eski ağırlıklarla
+başlamaktan (o durumda model_dosyasi alanına last.pt/best.pt yazılır)
+FARKLI bir şey.
+
+===============================================================
+8) ÖN-ETİKETLEME MANTIĞI
+===============================================================
+Konum: app.py'de ONETIKET_MODEL_ONBELLEK, _arac_class_idlerini_bul(),
+/api/onetiket/calistir.
+
+Hazır/genel bir model (varsayılan yolo11n.pt, COCO üzerinde eğitilmiş)
+yükleniyor, bu modelin "car/truck/bus" gibi isimlerdeki class ID'lerini
+İSİMLE arayarak buluyoruz (COCO'nun sabit index numarasını hardcode
+ETMİYORUZ — böylece farklı bir genel model kullanılırsa da çalışır).
+Bulunan araç kutuları, kullanıcının seçtiği HEDEF class ile (örn.
+"fiat_egea") force-write ediliyor. "sadece_en_buyuk" seçeneğiyle
+kalabalık sahnelerde en büyük kutuyu almak mümkün. Bu bir YARDIMCI
+bootstrap aracı — ELLE KONTROL/DÜZELTMENİN yerini tutmuyor.
+
+===============================================================
+9) VERİ BİRLEŞTİR MANTIĞI + RİSK
+===============================================================
+Sınıf başına ayrı klasörleri (clio3/, egea/, megane/...) SADECE
+etiketlenmiş olanları alıp class adı ön ekiyle (çakışma olmasın diye)
+tek bir images/+labels/ yapısına KOPYALIYOR (taşımıyor, orijinale
+dokunmuyor). KENDİ data.yaml'ını üretmiyor — bkz. bölüm 3'teki risk.
+
+===============================================================
+10) SPLITTER + ANALİZ RAPORU
+===============================================================
+Train/val/test'e rastgele böler (oran kullanıcı belirler), yeni bir
+data.yaml + analiz.txt üretir. analiz.txt içinde:
+- Bölüm özeti (görsel/etiket/nesne/eksik sayıları, train/val/test)
+- Class dağılımı (her sınıftan train/val/test'te kaçar tane)
+- YENİ EKLENEN: Görsel boyutu (çözünürlük) analizi — min/ort/max
+  genişlik-yükseklik, tutarsızlık uyarısı (çok farklı çözünürlükte
+  görseller karışmışsa), ve veriye göre önerilen imgsz değeri. Amaç
+  eğitimde seçilecek imgsz'in kaynak veriye uygun olup olmadığını
+  görmek — YOLO görselleri zaten imgsz'e otomatik yeniden
+  boyutlandırıyor, yani hepsinin elle aynı boyutta olması ZORUNLU
+  değil, burada amaç sadece doğru imgsz seçimi ve bozuk/anormal
+  görselleri fark etmek.
+
+===============================================================
+11) GÜVENLİK KURALLARI (KOD GENELİNDE TEKRARLANAN DESEN)
+===============================================================
+- Var olan sınıflar/ID'ler ASLA silinmez, yeniden sıralanmaz.
+- Yeni sınıf eklemek her zaman AÇIK KULLANICI ONAYI gerektirir
+  ("onay_gerekli" cevap deseni — Etiketleme ve Ön-Etiketleme'de aynı).
+- images/ ve labels/ İÇİNDEKİ dosyalara elle dokunulmaz (araçlar
+  otomatik yönetiyor) — ama yeni görsel EKLEMEK (images/'e atıp
+  Etiketleme'den etiketlemek) normal kullanım.
+
+===============================================================
+13) FUSION MANTIĞI — DETAYLI (nasıl çalışıyor, ne kalıcı ne değil)
+===============================================================
+Konum: templates/fusion.html, static/fusion.js, app.py'de "FUSION" bölümü
+(/fusion, /api/fusion/calistir). CLI (komut satırı) hali: kod/06_fusion.py
+(aynı mantık, ama arayüzdeki son düzeltmeler henüz CLI'a yansıtılmadı).
+
+Akış (4 adım, log kutusunda [1/4]..[4/4] olarak görünür):
+
+1) Marka/model modeliniz (kendi eğittiğiniz best.pt) çalışır -> her araç
+   için bir kutu + class adı (renault_clio3 gibi) + güven skoru.
+
+2) Plaka tespit modeli çalışır -> plaka kutuları. Çok düşük güvenli
+   (varsayılan eşik 0.40 altı) adaylar burada elenir -- bariz yanlış-
+   pozitifleri (plaka olmayan bir dikdörtgeni plaka sanma) baştan atmak için.
+
+3) Her kalan plaka kutusu kırpılıp OCR'a (fast-plate-ocr -- plakaya özel
+   eğitilmiş bir model, EasyOCR'ın yerini aldı) verilir, Türk plaka
+   formatına göre temizlenir/doğrulanır. fast-plate-ocr'ın kendi plaka
+   TESPİTİ yok, sadece kırpılmış görüntüyü okuyor -- tespiti hâlâ bizim
+   plaka_tespit.pt modelimiz yapıyor, yani mevcut mimariyle çakışmıyor.
+
+4) Eşleştirme + güven katmanlama:
+   a) Önce SADECE özel modelinizin bulduğu araç kutularıyla eşleştirme
+      denenir (plaka kutusunun ne kadarı araç kutusunun içinde kalıyor --
+      "örtüşme oranı", normal IoU değil, çünkü plaka araca göre çok küçük).
+   b) Bir araca birden fazla plaka adayı denk gelirse, en yüksek plaka
+      TESPİT güvenine sahip olan seçilir (son gelen değil).
+   c) Hiçbir araç kutusuna eşlenemeyen ("öksüz") plaka kalırsa, O ZAMAN
+      VE SADECE O ZAMAN genel/fallback bir araç taraması yapılır --
+      Ön-Etiketleme'nin kullandığı AYNI hazır COCO modeliyle (varsayılan
+      yolo11n.pt, "car/truck/bus" class'larını İSİMLE arayarak). Bu
+      taramadan SADECE öksüz plakayı içinde barındıran kutu alınır, diğer
+      (alakasız arka plan) araçlar HİÇ eklenmez -- yoksa kalabalık bir
+      sahnede onlarca ilgisiz araç "tanımlanmadı" diye işaretlenip sonucu
+      anlamsızca kalabalıklaştırıyordu (bu, ilk versiyonda yaşanan ve
+      düzeltilen bir sorundu).
+
+4.5) RENK TESPİTİ (2026-08-07'de eklendi -- ayrı bir "adım" numarası
+   almadı çünkü yukarıdaki 4 adıma paralel/ek bir hesaplama, akışı
+   değiştirmiyor): her araç kutusu belirlendikten SONRA, `app.py`'deki
+   `_renk_tespit_et(goruntu, x1, y1, x2, y2)` fonksiyonu çağrılır.
+   NASIL ÇALIŞIYOR: model EĞİTİLMİYOR -- kutunun ORTA %50'lik
+   bölgesindeki pikseller (kenar/tekerlek/cam/gölge payı dışarıda
+   bırakılarak) `cv2.cvtColor(..., COLOR_BGR2HSV)` ile HSV renk
+   uzayına çevrilir, ton/doygunluk/parlaklığın MEDYANI (ortalama değil
+   -- birkaç aşırı parlak/karanlık piksel/yansıma ortalamayı kolayca
+   çarpıtabiliyordu) alınır ve basit eşiklerle bir renk ismine
+   ("beyaz/siyah/gri/gümüş/kırmızı/turuncu/sarı/yeşil/turkuaz/mavi/
+   mor") eşlenir. Bu, PROJE_BRIEF'in 2026-07-28 güncellemesinde zaten
+   planlanmış ("Renk tespiti eğitim gerektirmez") ama önceki
+   oturumlarda hiç kodlanmamış bir bileşendi (bileşen 3'ün ikinci
+   yarısı) -- kullanıcı sorunca fark edilip aynı gün eklendi.
+   NEREDE KULLANILIYOR: Fusion Tekli Görsel (`/api/fusion/calistir`),
+   Fusion Sürekli İzleme (`_izleme_dongusu` -- renk, `gorsel_kare`
+   ile AYNI karede/AYNI anda hesaplanıyor ki en iyi görünüm hangi
+   karedeyse renk de o karedeki kaporta rengini yansıtsın), Model
+   Test Tekli Görsel + Klasör Toplu (`sonuc.orig_img`/`tahmin.orig_img`
+   üzerinden, dosyayı ikinci kez okumaya gerek kalmadan).
+   KALICILIK: `tespitler` tablosuna yeni bir `renk TEXT` kolonu
+   eklendi (eski db/otogoz.db dosyaları için `ALTER TABLE ... ADD
+   COLUMN` ile otomatik migration -- kolon zaten varsa hata
+   yutuluyor). Veritabanı Sorgu arayüzüne de bağımsız, canlı arama
+   yapan bir "renk" kutusu + backend'de `renk` filtre parametresi
+   eklendi.
+
+"tanımlanmadı" TAM OLARAK NEDİR (sıkça sorulan soru): Bu YENİ BİR CLASS
+DEĞİL. Modele, data.yaml'a, eğitime HİÇBİR ŞEY eklenmiyor/kaydedilmiyor.
+Genel COCO modeli aslında "car" diyor ama biz onun class adını hiç
+kullanmıyoruz -- sadece kutunun KONUMUNU alıp, kodda elle sabit bir
+string yazıyoruz: `arac_tahminleri.append(("tanimlanmadi", guven,
+"taninmiyor"))`. Bu string sadece O TEK çalıştırmanın JSON çıktısında/
+ekranında görünür, hiçbir dosyaya (data.yaml, model ağırlığı) kalıcı
+olarak işlenmez. Amaç: "modelimiz bu aracı tanıyamadı ama orada bir araç
+olduğunu biliyoruz" demenin bir yolu -- ileride bu kayıtları ayrı
+filtreleyip "yeni class adayı" diye değerlendirebilmeniz için.
+
+Sonuç kalıcılığı (2026-07-31 itibarıyla GÜNCELLENDİ -- SQLite şeması
+kuruldu, #7): her çalıştırma HALA `kayitlar/fusion_sonucu.json`'a
+YAZILIYOR (üzerine yazılır, sadece "son sonuç" önizlemesi için) AMA
+ARTIK AYRICA `db/otogoz.db` içindeki `tespitler` tablosuna da BİRİKİMLİ
+olarak (her araç ayrı bir satır, ÜZERİNE YAZMAZ, EKLER) kaydediliyor --
+geçmiş kaybolmuyor, `WHERE plaka = ...` gibi sorgularla aranabiliyor.
+Şema/kararların detayı: kod/07_veritabani.py (dosya adı rakamla
+başladığı için doğrudan import edilemiyor, app.py'de aynı mantık
+`_fusion_db_tablosunu_olustur`/`_fusion_db_kaydet` olarak TEKRARLANIYOR).
+DB'ye yazarken hata olursa (örn. dosya kilitli) sadece log'a uyarı
+düşülüyor, Fusion'ın asıl sonucu (görsel + JSON) BOZULMUYOR. Sonuç
+görseli `static/fusion_ciktilari/` altına kaydediliyor (her çalıştırma
+ayrı zaman damgalı dosya, birikir, silinmez) -- bu dosya yolu artık
+`tespitler.sonuc_gorsel_yolu` sütununda da tutuluyor.
+
+EasyOCR-dönemi bilinen sorun ÇÖZÜLDÜ (2026-07-31): OCR bazen plakanın
+üstündeki marka yazısı/logosu veya soldaki TR şeridiyle karışıp kirli
+okuyordu (örn. gerçek "01 BCP 836" iken "ITRIC01BCPFM4LDRE836" okunmuş).
+Kök sebep: EasyOCR genel amaçlı bir sahne-metni OCR'ı, plakaya özel
+eğitilmemiş. Çözüm: OCR motoru `fast-plate-ocr` (model:
+"cct-s-v2-global-model") ile değiştirildi -- profesyonel ANPR
+sistemlerinin de yaptığı gibi, dar bir alanda (sadece plaka metni)
+eğitilmiş bir model kullanılıyor artık. `_fusion_bloklari_birlestir`/
+`_fusion_en_iyi_sonucu_sec` (EasyOCR'ın çok-bloklu sonuçlarını
+birleştirmek için gerekliydi) kaldırıldı, çünkü fast-plate-ocr zaten
+tek, temiz bir metin döndürüyor. Detay: ILERLEME_GUNLUGU.md "Adım 6"
+girdisi (fast-plate-ocr geçişi notu güncellendi).
+
+===============================================================
+14) HERHANGİ BİR YENİ ÖZELLİK İÇİN KENDİNE SORMAN GEREKEN SORULAR
+===============================================================
+Bu bölüm, "tanımlanmadı nasıl ekleniyor, yeni class mı açıyor?" gibi iyi
+bir sorudan çıktı -- her yeni özellik/mekanizma eklendiğinde (benim
+tarafımdan ya da ileride sizin tarafınızdan) sorulması gereken standart
+sorular şunlar:
+
+1. KALICI Mİ, GEÇİCİ Mİ? Bu bilgi bir DOSYAYA mı yazılıyor (data.yaml,
+   .txt etiket, .json, .db) yoksa sadece o anki çalıştırmanın belleğinde/
+   ekranında mı duruyor? (Örnek: "tanımlanmadı" sadece o çalıştırmanın
+   JSON'unda duruyor, data.yaml'a hiç dokunmuyor.)
+
+2. NEREYE KAYDEDİLİYOR (tam yol)? Her kalıcı çıktının bir dosya yolu
+   olmalı -- "kayitlar/fusion_sonucu.json", "veri/data.yaml",
+   "runs/egitimX/weights/best.pt" gibi. Yol bilinmiyorsa "kalıcı" demek
+   anlamsız.
+
+3. ÜZERİNE MI YAZIYOR, EKLEME Mİ YAPIYOR? (Örnek: fusion_sonucu.json her
+   çalıştırmada ÜZERİNE yazılıyor, bir önceki kayıt kaybolur -- ama
+   static/fusion_ciktilari/ altındaki görseller BİRİKİYOR, silinmiyor.)
+
+4. SINIF (class) LİSTESİNE DOKUNUYOR MU? Bu proje için EN KRİTİK soru --
+   yeni bir sınıf/isim görünce hemen "bu data.yaml'a mı ekleniyor" diye
+   sorun. Bölüm 3'teki kural gereği, class ID'lerin anlamını değiştirmek
+   TÜM eski etiketleri bozar -- bu yüzden her yeni-isim-görünen yerde bu
+   soru şart.
+
+5. HANGİ MODEL/HANGİ VERİYLE ÜRETİLDİ? Bir sayı (güven skoru, metrik)
+   gördüğünüzde "bu hangi modelin çıktısı, hangi ölçekte" diye sorun --
+   örn. genel COCO modelin güveni ile kendi özel modelinizin güveni FARKLI
+   şeyleri ölçüyor (biri "bu bir araç mı", diğeri "hangi spesifik model"),
+   birebir karşılaştırılamaz.
+
+6. HER ZAMAN MI ÇALIŞIYOR, YOKSA KOŞULLU MU? (Örnek: fusion'daki genel/
+   fallback araç taraması artık SADECE öksüz plaka varsa çalışıyor --
+   "her zaman tüm kadrajı tarıyor" sanmak yanlış olurdu, ilk versiyonda
+   tam da bu yüzden gereksiz gürültü üretiyordu.)
+
+7. GERİ ALINABİLİR Mİ / TEKRARLANABİLİR Mİ? Bir script/araç tekrar
+   çalıştırılınca aynı sonucu mu üretir (deterministik) yoksa rastgelelik
+   var mı (örn. Splitter'ın train/val/test'e rastgele bölmesi, Augment'ın
+   "dinamik" modu)? Rastgelelik varsa, sonuçları karşılaştırırken bunu
+   hesaba katmak gerekir.
+
+Bu soruları herhangi bir yeni özellik açıklamasında (benden ya da başka
+biri anlatırken) sormak, "gerçekten ne olduğunu" hızlıca netleştirir.
+
+===============================================================
+15) HER ARAÇ İÇİN BU SORULARIN CEVAPLARI (TEK TEK)
+===============================================================
+Yukarıdaki 7 soruyu (kalıcı mı / nereye / üzerine mi-ekleme mi / class'a
+dokunuyor mu / hangi model-veri / her zaman mı-koşullu mu / tekrarlanabilir
+mi) Toolset'teki HER araç için tek tek cevaplıyorum -- böylece "bu araç ne
+yapıyor" sorusuna hızlı, karşılaştırılabilir bir referans olsun.
+
+--- DATA ETİKETLEME ---
+Kalıcı mı: Evet. Nereye: labels/<ad>.txt (her kaydedişte o görselin TÜM
+kutuları yeniden yazılır), data.yaml (yeni class onaylanırsa SADECE sona
+eklenir), etiket_klasoru/_bayraklar.json (bayrak/işaretleme durumu).
+Üzerine mi/ekleme mi: bir görselin etiket dosyası her kaydedişte TAMAMEN
+üzerine yazılır; data.yaml'da var olan class'lar ASLA değişmez, sadece
+ekleme olur. Class'a dokunur mu: evet ama sadece kullanıcı onayıyla yeni
+class eklerken. Model/veri: yok -- tamamen elle (fare ile kutu çizme).
+Ne zaman: her görsel değişiminde otomatik kaydeder. Tekrarlanabilir mi:
+konu dışı -- bu bir insan girdisi, "tekrar çalıştırma" kavramı yok.
+
+--- DATASET SPLITTER ---
+Kalıcı mı: Evet. Nereye: çıktı klasörü/images/{train,val,test},
+labels/{train,val,test}, data.yaml, analiz.txt. Üzerine mi/ekleme mi: aynı
+çıktı klasörü tekrar kullanılırsa üzerine yazar -- bu araç zaten "her
+seferinde yeniden üretilebilir" kabul ediliyor (bkz. bölüm 2). Class'a
+dokunur mu: yeni data.yaml üretir ama class isim/ID'leri orijinalden
+AYNEN kopyalanır, değişmez. Model/veri: yok, sadece dosya kopyalama +
+rastgele bölme. Ne zaman: kullanıcı tetikler, tek seferlik. Tekrarlanabilir
+mi: OPSİYONEL (2026-08-03 güncellemesi) -- arayüzde bir "Sabit seed"
+alanı var; boş bırakılırsa eskisi gibi `random.shuffle` seedsiz çalışır
+(her bölmede FARKLI sonuç), bir sayı girilirse izole bir
+`random.Random(seed)` örneği kullanılır ve AYNI seed'le tekrar
+çalıştırıldığında train/val/test'e giren görseller birebir AYNI çıkar.
+Kullanılan seed (veya "seed verilmedi" notu) `analiz.txt` çıktısına da
+yazılıyor.
+
+--- DATA AUGMENT ---
+Kalıcı mı: Evet, yeni görsel+etiket dosyaları. Nereye: çıktı klasörü/
+images, /labels, dosya adında hangi tekniklerin uygulandığı kısaltmayla
+görünür (_augp, _augb...). Üzerine mi/ekleme mi: farklı teknik
+kombinasyonları farklı isim aldığı için ÇAKIŞMADAN bir arada durur
+(ekleme); AYNI kombinasyonla tekrar çalıştırılırsa aynı isim üretilip
+üzerine yazılır. Class'a dokunur mu: hayır, etiket dosyası olduğu gibi
+kopyalanır. Model/veri: yok, PIL görüntü işleme. Ne zaman: kullanıcı
+tetikler. Tekrarlanabilir mi: "sabit" modda EVET (sabit değer, hep aynı
+sonuç); "dinamik" modda HAYIR (taban-hedef aralığında rastgele değer).
+
+--- MODEL EĞİTİMİ ---
+Kalıcı mı: Evet. Nereye: runs/<proje>/<calisma_adi>/weights/{best,last}.pt,
+args.yaml, results.csv, çeşitli .png grafikler. Üzerine mi/ekleme mi:
+`exist_ok=True` olduğu için AYNI çalışma adıyla tekrar çalıştırılırsa
+ÜZERİNE yazar (eski sonuç kaybolur) -- farklı `calisma_adi` verirseniz
+ayrı klasör, kaybolmaz. Class'a dokunur mu: hayır, data.yaml'ı SADECE
+okur -- ama eğitilen model kendi ağırlıklarının içinde class isimlerini
+"hafızasına" alır (`model.names`), bu yüzden best.pt kendi başına
+class listesini taşıyan bağımsız bir dosyadır. Model/veri: kullanıcı
+seçer. Ne zaman: arkaplan thread'inde, "devam et" modunda diğer TÜM
+parametreler atlanır (resume=True). Tekrarlanabilir mi: ultralytics
+`seed: 0` + `deterministic: true` kullanıyor (args.yaml'da görülüyor) --
+büyük ölçüde benzer sonuç beklenir ama GPU'da bit-bit aynı garanti değil.
+
+--- MODEL TEST ---
+Kalıcı mı: Evet ama sadece görsel/video ÇIKTISI. Nereye: static/
+test_ciktilari/sonuc_<timestamp>.jpg (ya da video eşleniği); "Farklı
+Kaydet" ile kullanıcı ayrıca kendi seçtiği yere kopyalar. Üzerine mi/
+ekleme mi: her çalıştırma zaman damgalı YENİ dosya adı alır -- hep
+EKLEME, üzerine yazma yok (ama otomatik temizlik de yok, klasör zamanla
+büyür). Class'a dokunur mu: hayır, sadece OKUR (modelin `names`
+bilgisini). Model/veri: kullanıcı seçer. Ne zaman: görsel modu anlık/
+senkron, video modu arkaplan thread + polling. Tekrarlanabilir mi: evet,
+aynı model+görsel+conf ile aynı sonucu üretir (rastgelelik yok).
+
+EK (2026-08-03): "Metrikler (mAP)" modu (4. sekme) -- kalıcı çıktı
+üretmez, sadece ekrana dört sayı (mAP50, mAP50-95, precision, recall)
+basar. Model + val bölümü içeren bir data.yaml gerektirir (Dataset
+Splitter çıktısı gibi); ultralytics'in model.val() fonksiyonu
+arkaplan thread + polling ile (video modundaki aynı desen)
+çalıştırılır. Tekrarlanabilir mi: evet, aynı model+val seti aynı
+sonucu üretir.
+
+--- ÖN-ETİKETLEME ---
+Kalıcı mı: Evet. Nereye: labels/*.txt (force-write, hedef class ile),
+data.yaml (yeni class SADECE onaylanırsa). Üzerine mi/ekleme mi:
+"üzerine yaz" seçeneği açıksa var olan etiketin üzerine yazar, kapalıysa
+zaten etiketli olanı hiç değiştirmez (atlar). Class'a dokunur mu: evet,
+potansiyel olarak (aynı onay kuralı). Model/veri: varsayılan yolo11n.pt
+(hazır/COCO), değiştirilebilir. Ne zaman: "sadece_en_buyuk" seçeneği
+kalabalık sahnede davranışı değiştirir. Tekrarlanabilir mi: evet,
+deterministik (aynı model+görsel = aynı sonuç).
+
+--- VİDEO'DAN KARE ÇIKAR ---
+Kalıcı mı: Evet. Nereye: çıktı klasörü/<video_adi>_kare_%04d.jpg. Üzerine
+mi/ekleme mi: aynı video+çıktı klasörüyle tekrar çalıştırılırsa muhtemelen
+üzerine yazar (aynı numaralandırma); farklı video farklı ön-ek aldığı için
+çakışmaz. Class'a dokunur mu: hayır, hiç etiket/data.yaml işi yok. Model/
+veri: yok, ffmpeg kullanıyor. Ne zaman: fps parametresine göre ne kadar
+seyrek kare alınacağı değişir. Tekrarlanabilir mi: evet, aynı video+fps
+ile aynı kareler üretilir.
+
+--- VERİ BİRLEŞTİR ---
+Kalıcı mı: Evet. Nereye: hedef images/ + labels/ (class/klasör adı ön
+ekiyle). Üzerine mi/ekleme mi: zaten var olan (aynı isimli) dosyaları
+ATLAR, tekrar kopyalamaz -- yani "ekleme", üzerine yazma yok. Class'a
+dokunur mu: KENDİ data.yaml'ını üretmez (bölüm 3/9'daki risk) -- bu
+yüzden class konusunda dolaylı bir risk taşır (tek bir ortak/master
+data.yaml şart, aksi halde class ID'leri çakışabilir). Model/veri: yok,
+sadece dosya kopyalama. Ne zaman: her zaman aynı mantık. Tekrarlanabilir
+mi: evet, rastgelelik yok.
+
+--- FUSION ---
+Kalıcı mı: Evet. Nereye: kayitlar/fusion_sonucu.json (her çalıştırmada
+ÜZERİNE yazılır, sadece "son sonuç" önizlemesi), static/fusion_ciktilari/
+(sonuç görselleri, zaman damgalı, birikir), VE db/otogoz.db'deki
+`tespitler` tablosu (her araç ayrı satır, BİRİKİMLİ -- #7 tamamlandı).
+Class'a dokunur mu: HAYIR --
+"tanımlanmadı" YENİ BİR CLASS DEĞİL, hiçbir dosyaya (data.yaml, model
+ağırlığı) kalıcı yazılmayan, sadece o çalıştırmanın JSON/ekran çıktısında
+görünen düz bir metin etiketi (bkz. bölüm 13, bu konunun tam detayı orada).
+Model/veri: İKİ model birden (kendi marka/model modeliniz + plaka modeli)
++ koşullu olarak ÜÇÜNCÜ bir genel/fallback model (yolo11n.pt). Ne zaman:
+fallback SADECE öksüz (eşlenemeyen) plaka varsa çalışır -- her zaman tüm
+kadrajı taramaz. Tekrarlanabilir mi: evet, aynı modeller+görselle aynı
+sonucu üretir (OCR ve YOLO çıkarımı deterministik, rastgelelik yok).
+
+EK: "Sürekli İzleme (Video)" modu (#9) İSTİSNA -- tekrarlanabilir DEĞİL.
+`model.track()` bir video akışını baştan işlerken kareler arası
+DURUM (hangi ID'ler görüldü, ID'lerin geçmiş konumları) tutuyor; aynı
+videoyu iki kez çalıştırmak GENELDE aynı sonucu verir ama ByteTrack'in
+iç mantığı frame-by-frame bağımlı olduğu için garanti %100 değil (örn.
+GPU/CPU zamanlama farkları teorik olarak ID atamasını etkileyebilir --
+pratikte nadir). Kalıcılık: her YENİ araç ID'si için `db/otogoz.db`'ye
+BİR satır + `static/fusion_ciktilari/izleme_*.jpg` kare görseli.
+
+===============================================================
+16) PROJENİN GENEL DURUMU (özet)
+===============================================================
+Toolset (evrensel araç seti — nevfel.txt gereksinimi): 8 araç
+(Etiketleme, Splitter, Augment, Model Eğitimi, Model Test, Ön-Etiketleme,
+Video'dan Kare Çıkar, Veri Birleştir) + OtoGöz'e özel 9. araç (Fusion)
+tamamlandı ve çalışıyor.
+
+OtoGöz (asıl staj projesi) tarafında bekleyen adımlar:
+- Fusion mantığı kodlandı, gerçek fotoğraflarla test edildi, OCR motoru
+  fast-plate-ocr'a geçirildi (bkz. bölüm 13) — kirli okuma sorunu çözüldü.
+- Model Test'e gerçek zamanlı Webcam modu eklendi (MJPEG akış + arka plan
+  yakalama thread'i), Windows kamera-izni silent-failure hatası düzeltildi.
+- **SQLite şeması kuruldu (#7) — tamamlandı.** `db/otogoz.db` içinde tek
+  bir `tespitler` tablosu (plaka/marka_model + güven/durum + zaman +
+  görsel yolları), Fusion her çalıştığında OTOMATİK olarak (JSON'a ek
+  olarak, onu değiştirmeden) bu tabloya BİRİKİMLİ kayıt yazıyor.
+  Detay: bölüm 13'ün "Sonuç kalıcılığı" kısmı ve kod/07_veritabani.py.
+- Statik görüntüden uçtan uca zincir — henüz birleştirilmedi (Fusion tek
+  görsel için elle tetikleniyor, otomatik "gir->tespit->DB" akışı yok)
+- Sürekli çalışan döngü, arama/sorgu script'i, demo hazırlığı — bekliyor
+- Gece boyu başlatılan gerçek GPU eğitiminin (s.pt, imgsz=960,
+  epochs=70, patience=25, batch=32) sonucu Fusion üzerinden dolaylı
+  test edildi (bilinen class'larda yüksek güvenle doğru çalışıyor).
+
+**#8 (statik görüntüden uçtan uca zincir) FİİLEN TAMAMLANDI** —
+Fusion'ın kendisi zaten detect->OCR->classify->fusion->DB kayıt
+zincirini tek tıklamada yapıyor, DB Browser'da gerçek fotoğraflarla
+üretilen doğru satırlar görülerek doğrulandı (2026-07-31). Ekstra bir
+kod yazılmadı, sadece brief'teki tanım Fusion+DB entegrasyonuyla zaten
+karşılanmış oldu.
+
+**#9 (sürekli çalışan döngü) tamamlandı -- hem video hem webcam kaynaklı**
+(2026-07-31, webcam desteği 2026-08-07'de eklendi) — Fusion sayfasına
+"Sürekli İzleme" modu eklendi: bir video dosyasını (ya da artık canlı
+webcam'i) kare kare işleyip, `model.track()` (ByteTrack) ile her
+fiziksel araca kalıcı bir takip kimliği (ID) atıyor, bir ID İLK
+göründüğünde plaka+OCR çalıştırıp DB'ye kaydediyor, aynı ID kadrajda
+kaldığı sürece TEKRAR kaydetmiyor (dedup). Aynı fiziksel aracın class
+karışıklığından iki üst üste kutu/iki ID alması riskine karşı
+`agnostic_nms=True` kullanıldı. `_izleme_dongusu` artık bir `webcam_mi`
+parametresi alıyor -- webcam modunda `cv2.VideoCapture(0, CAP_DSHOW)`
+(Model Test'teki webcam mantığıyla aynı, DSHOW-fallback + ardarda
+başarısız okuma sayacı) ile açılıyor, video dosyası yerine sonsuz akış
+okunuyor. Canlı önizleme için `/api/fusion/izleme_webcam_stream`
+(MJPEG, Model Test'teki webcam_stream ile aynı desen) eklendi. Detay:
+app.py'de "FUSION -- SÜREKLİ İZLEME" bölümü (`_izleme_dongusu`,
+`/api/fusion/izleme_baslat|durdur|durum|webcam_stream`).
+
+Aynı gün ayrıca iki gerçek hata bulunup düzeltildi: (1) kaydedilecek
+görsel (`gorsel_kare`) eskiden HER karede koşulsuz güncelleniyordu --
+bu, araç kadrajdan ÇIKARKEN görülen (genelde en kırpık) son kareyi
+kalıcı kılıyordu. Artık SADECE en yüksek güvenli sınıflandırmanın
+yapıldığı karede (ve kutu kare kenarına değmiyorsa) güncelleniyor.
+(2) Kutu kare kenarına değiyorsa (aracın sadece bir köşesi görünüyorsa)
+ve daha önce TAM görünümlü bir kare zaten kaydedilmişse, kısmi görünüme
+ait daha yüksek güvenli bir tahmin bile o tam kareyi EZMİYOR.
+
+**Renk tespiti (bileşen 3'ün ikinci yarısı) tamamlandı (2026-08-07).**
+PROJE_BRIEF'te planlanıp o zamana kadar hiç kodlanmamış tek eksikti --
+proje geneli bir denetim sırasında fark edilip aynı gün eklendi. Detay
+ve NASIL çalıştığı: bölüm 13'teki "4.5) RENK TESPİTİ" alt başlığı.
+Kalan tek bilinen boşluk artık **#8'in "genişletme" (opsiyonel) parçası
+olan giriş/çıkış yön takibi** -- bu, brief'te baştan opsiyonel/
+genişletme diye ayrılmıştı, eksikliği bir tasarım kararı, gözden kaçan
+bir şey değil.
+
+Yani şu an en mantıklı sıradaki adımlar: (1) #9'u gerçek bir test
+videosuyla doğrulamak (kullanıcı henüz test etmedi), (2) arama/sorgu
+script'i (#10, artık DB hazır olduğu için mümkün), (3) kamera
+kalibrasyonu araştırmasını derinleştirmek, (4) ileride webcam'i de
+sürekli izleme moduna bağlamak.

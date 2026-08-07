@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Veritabanı Sorgu</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani genis">
+    <h1>Veritabanı Sorgu</h1>
+    <p class="aciklama">
+      Fusion / Sürekli İzleme çalışırken <code>db/otogoz.db</code>'deki
+      "tespitler" tablosuna biriken kayıtları arar. Marka/model ve plaka
+      ayrı kutulardan, birbirinden bağımsız olarak (istersen ikisini
+      birden, istersen tek birini) aranır — kısmi yazım yeterli, birkaç
+      harf yazar yazmaz sonuçlar otomatik güncellenir. "Yıl" alanı aracın
+      üretim yılı DEĞİL, o kaydın <strong>tespit edildiği</strong> yıldır
+      (veritabanı araç üretim yılını tutmuyor).
+    </p>
+
+    <div class="db-arama-satiri">
+      <input type="text" id="db_marka_model_kutusu" placeholder="marka/model yaz... (ör: clio, egea)">
+      <input type="text" id="db_plaka_kutusu" placeholder="plaka yaz... (ör: 34ABC123)">
+      <input type="text" id="db_renk_kutusu" placeholder="renk yaz... (ör: beyaz, kırmızı)" class="db-yil-kutusu">
+      <input type="text" id="db_yil_kutusu" placeholder="yıl (tespit yılı, ör: 2026)" class="db-yil-kutusu">
+      <button type="button" id="db_ara_btn" class="dosya-sec-btn">ARA</button>
+    </div>
+
+    <div id="db_ozet" class="db-ozet"></div>
+
+    <div id="db_sonuclar" class="db-sonuclar"></div>
+  </section>
+
+  <script src="/static/veritabani.js"></script>
+</body>
+</html>

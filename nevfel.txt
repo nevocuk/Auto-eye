@@ -1,0 +1,135 @@
+PROJE GÖREV LİSTESİ
+
+
+
+
+1. DATA ETİKETLEME ARAYÜZÜ 
+
+<  seçtiğin projeye göre etiketleme arayuzu oluşturmalısın
+   seg/detect veya pose etiketleme arayuzu sadece biri için olması yeterli. 
+   kullanıcı  data.yaml + sadece images klasörü veya images/ labels klasörü girdi olarak verebilsin arayuze,
+   arayuzde  seçilen etiketleme formatına göre resimde nesneleri etiketleyebilecek
+   
+   
+2. dataset spliter arayüzü 
+ 
+    kullanıcı bu arayuz ile images/labels ve  data.yaml dosyalarını girdi olarak vericek çıktı olarak ise 
+    test / train / val  data.yaml ve analiz.txt dosyalarını çıktı olarak alıcak 
+    arayüzde kullanıcı dataset ayırma oranını seçebilecek örneğin 70 /15/15  veya  80/ 10 /10 gibi oranlar seçilecek 
+    ve images ve labesler bu orana göre kopyalanarak klasörlenecek.
+    
+     analiz.txt dosyasının içriği ise  bu formatta olacak.... 
+     (tabi içerikler verilen datasete göre güncellenecek amaç bölüm özetini verebilecek ve train /val/teste  her labelsin kaçar adet olduğunu bilmek....)
+================================================================================
+📊 YOLO DETECT VERİ SETİ DETAYLI ANALİZ RAPORU
+================================================================================
+
+📂 BÖLÜM ÖZETİ
+--------------------------------------------------------------------------------
+Bölüm          Görsel   Etiket  Eşleşen    Nesne EksikLbl EksikImg
+--------------------------------------------------------------------------------
+train           19265    19265    19265    96716        0        0
+val              2137     2137     2137    10780        0        0
+test             2151     2151     2151    10606        0        0
+
+🎯 SINIF DAĞILIMI (Train / Val / Test yan yana)
+--------------------------------------------------------------------------------
+  ID  Sınıf                      train       val      test    Toplam
+--------------------------------------------------------------------------------
+   0  Biber                       2957       302       358      3617
+   1  Domates                     1456       195       156      1807
+   2  Feslegen                    1167       134       133      1434
+   3  Marul                       3370       448       312      4130
+   4  Maydanoz                    1979       206       159      2344
+   
+   
+ 
+3.DATA augment  arayüzü 
+
+
+ < kullanıcı girdi olarak yine isterse sdce images / data.yaml  veya images/labels data.yaml  girebilecek arayüze.
+ 
+ < data  çoğaltma yöntemleri araştırılamlı ve eklenmeli/ parlaklık/keskinlik/blur/gölge... vb yöntemler eklenmli arayüze
+ 
+ < arayuzde kullanıcı isterse verilen girdi resimlerini hepsine aynı augmentleri yaparak sabit moda 1 adet çoğaltabilmeli veya
+ 
+  dinamik mod ile sabit augment değerleri ve  kullanıcnın belirleyeceği yeni augment değerleri arasında istenilen adet kadar rastgele yeni görseller oluştabilmelidir. ( bunu anlamadıysanız bana sorabilirsiniz) 
+  
+< oluşan augment görsel/txt ler başka bir klasöre eklenmeli verilen klasörle yanı yere eklenmemeli.
+
+< bir filtreleme alanı olmalı oraya yazılan labels ismini içeren görselelr sadece ekranda gösterilmeli ve seçilen augmentler yapılmalıdır
+ mesela filtreleme alanına biber yazıldıya sadece biber içeren görseller çoğaltılacak... böylelikle trainde az olan labels sayısı veri dengesini sağlamak için  çoğaltılabilinicektir. 
+ 
+ 
+
+4. model eğitimi arayuzu
+
+
+ < arayuzde model eğitimi çin gereklü tüm parametreler değiştirilebilinir olmalı
+  hangi modda detect/seg/pose  için proje seçildiyse arayuz o formatta eğitimi yapabilmeli metrikler  arayuzden okunabilemli yani bir terminal kısmı olmalıkı epoch / map50/ map90/recal.. gibi gibi değerler model eğitimi devam ederken düzgünce okunmalı ,,,, run klaösrüde arayuzden seçilmeli möodel çıktısının nereye kayıt edileceği yani. 
+  
+  
+5. model test arayuzu 
+
+ eğitim bittikten sonra oluşan model resim/video ve webcamden test edilebilinir olmalı... 
+ nesneleri tespit ederken tespit ettiği : labelsin ismi/ fps /time/interface/map değerlerinin hepsi tespit edilen nesnenin üstüne / arayüzde yazmalı 
+ 
+ 
+ 
+ notlar: 
+ 
+  tüm arayuzlere tek bir arayuz üstünden erişilebilinir olmalı,
+  
+  tüm arayuzler sdce senn datasetin ve modelin için değil dışardan başka modeller içinde çalışılabilinir olmalı...
+  
+    :  mesela  pose modeli seçtiysen ::   bende bitkiler için model eğitimi ve test kısmında bitki bazlı bir eğitim ve test yapabilmeliyim...
+    					    başkasıda insan pose durumu için model eğitim ve test yapabilmelidir. 
+    					    aynısı data augment içinde geçerlidir... 
+    					    
+    					    
+ arayuzlerin hiçbiri sadece sizin projenize göre olmamalı, evrensel olmalı diğerleride kullanabilmelidir.  
+ 
+ (evrenselden kastım  tüm pose detect ve seg  projelerine çalışacak demek değildir....
+  eğer projeniz pose ise :  tüm pose model ve datasetine ... 
+  eğer projeniz segmantasyon ise tüm segmantasyon dataset ve modellerinde çalışmalıdır.  ) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

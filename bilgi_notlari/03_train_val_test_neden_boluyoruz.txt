@@ -1,0 +1,30 @@
+TRAIN / VAL / TEST NEDEN AYRI OLMALI
+
+Aynı görselleri hem modele "öğretip" hem "sınavda" kullanırsan, model
+ezberler ve gerçek başarısını ölçemezsin. Bu yüzden veriyi 3'e ayırıyoruz:
+
+  TRAIN (~%70): Model bu görsellerle eğitilir, ağırlıklarını bunlardan
+                öğrenir.
+  VAL   (~%15): Eğitim sırasında (her epoch sonunda) "gerçekten mi
+                öğreniyor yoksa ezberliyor mu" diye ara kontrol için
+                kullanılır. Ezberleme (overfitting) başlarsa buradan
+                anlaşılır.
+  TEST  (~%15): Eğitim tamamen bittikten sonra, hiç görmediği görsellerle
+                yapılan NİHAİ, tarafsız başarı ölçümü. Rapor yazarken
+                "modelim %X doğrulukla çalışıyor" derken buraya bakılır.
+
+Dataset Splitter aracı bunu otomatik yapıyor: rastgele karıştırıp seçtiğin
+orana göre 3 klasöre dağıtıyor.
+
+ÖNEMLİ DERS (augment ile ilgili): Bir görselin "hafif değiştirilmiş"
+kopyasını (augment) train'e, orijinalini val/test'e (ya da tam tersi)
+koyarsan, model val/test'te aslında "gördüğü" bir şeyi tanır — skorlar
+yapay olarak şişer, gerçek başarıyı yansıtmaz. Bu yüzden augment'i HER
+ZAMAN sadece train klasörüne uygula (val/test'e asla karıştırma).
+
+PİLOT EĞİTİMDE GÖZLEMLEDİĞİMİZ ÖRNEK: 155 görsellik ilk eğitimde val
+skorları çok yüksek çıktı (mAP50 ~0.995), ama hiç görmediği yeni bir
+fotoğrafta bir Clio4'ü Fiat Egea sandı (%54 gibi düşük bir güvenle). Bu,
+val setinin train'e çok benzer (aynı tarz/kaynak fotoğraflar) olduğunun
+işaretiydi — yani yüksek val skoru tek başına "model harika" anlamına
+gelmiyor, veri çeşitliliğine de bakmak lazım.

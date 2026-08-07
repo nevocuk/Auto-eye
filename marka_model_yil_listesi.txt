@@ -1,0 +1,331 @@
+OTOGÖZ -- EĞİTİM SETİNDEKİ MARKA/MODEL/YIL LİSTESİ
+======================================================================
+
+ALFA_ROMEO
+--------------------------------------------------
+  159                                 2009-2010    (41 görsel)
+  4C                                  2011-2016    (120 görsel)
+  Giulietta                           2011-2015    (120 görsel)
+  MiTo                                2009-2015    (120 görsel)
+
+AUDI
+--------------------------------------------------
+  Allroad                             2014-2015    (45 görsel)
+  Audi A1                             2012-2015    (120 görsel)
+  Audi A3 hatchback                   2010-2014    (120 görsel)
+  Audi A3 sedan                       2014         (68 görsel)
+  Audi A4L                            2009-2015    (120 görsel)
+  Audi A5 convertible                 2010-2014    (120 görsel)
+  Audi A5 coupe                       2008-2014    (120 görsel)
+  Audi A5 hatchback                   2009-2014    (120 görsel)
+  Audi A6                             2004-2015    (120 görsel)
+  Audi A6L                            2009-2014    (120 görsel)
+  Audi A7                             2009-2015    (119 görsel)
+  Audi A8L                            2009-2015    (120 görsel)
+  Audi Q3                             2012-2015    (120 görsel)
+  Audi Q5                             2010-2013    (120 görsel)
+  Audi Q7                             2010-2014    (120 görsel)
+
+BMW
+--------------------------------------------------
+  Active Tourer                       2012-2015    (120 görsel)
+  BWM 1 Series convertible            2011         (45 görsel)
+  BWM 1 Series couple                 2011-2013    (67 görsel)
+  BWM 1 Series hatchback              2010-2013    (67 görsel)
+  BWM 2 Series                        2014-2015    (119 görsel)
+  BWM 2 Series Active Tourer          2014-2015    (120 görsel)
+  BWM 3 Series                        2008-2014    (120 görsel)
+  BWM 3 Series GT                     2013-2014    (120 görsel)
+  BWM 3 Series convertible            2008-2012    (120 görsel)
+  BWM 3 Series coupe                  2007-2011    (99 görsel)
+  BWM 3 Series estate                 2013-2014    (120 görsel)
+  BWM 4 Series convertible            2014         (94 görsel)
+  BWM 4 Series couple                 2013-2014    (60 görsel)
+  BWM 5 Series                        2009-2014    (120 görsel)
+  BWM 5 Series GT                     2010-2015    (120 görsel)
+  BWM 5 Series estate                 2012-2014    (120 görsel)
+  BWM 7 Series                        2009-2015    (119 görsel)
+  BWM X1                              2010-2014    (120 görsel)
+  BWM X3                              2009-2014    (120 görsel)
+  BWM X4                              2013-2015    (119 görsel)
+  BWM X5                              2008-2014    (120 görsel)
+  BWM X6                              2010-2015    (120 görsel)
+
+CHEVROLET
+--------------------------------------------------
+  AVEO hatchback                      2011-2014    (120 görsel)
+  Aveo sedan                          2011-2014    (120 görsel)
+  Camaro                              2010-2015    (113 görsel)
+  Captiva                             2010-2014    (120 görsel)
+  Corvette                            2010-2015    (120 görsel)
+  Cruze hatchback                     2013         (102 görsel)
+  Cruze sedan                         2009-2015    (120 görsel)
+  Epica                               2006-2013    (115 görsel)
+  Malibu                              2012-2014    (120 görsel)
+  Spark                               2011-2014    (114 görsel)
+  Trax                                2014         (119 görsel)
+
+CITROEN
+--------------------------------------------------
+  C3 Picasso                          2009-2012    (72 görsel)
+  C4 Aircross                         2012-2013    (119 görsel)
+  Cactus                              2013-2014    (118 görsel)
+  Citroen C1                          2013-2015    (120 görsel)
+  Citroen C2                          2010-2013    (118 görsel)
+  Citroen C3                          2004-2014    (120 görsel)
+  Citroen C4                          2006-2015    (119 görsel)
+  Citroen C5                          2009-2014    (120 görsel)
+  Elysee                              2013-2014    (120 görsel)
+  Grand C4 Picasso                    2009-2014    (120 görsel)
+
+DACIA
+--------------------------------------------------
+  Dokker                              2013         (62 görsel)
+  Duster                              2009-2014    (120 görsel)
+  Logan                               2005-2014    (120 görsel)
+  Sandero                             2009-2013    (97 görsel)
+
+FIAT
+--------------------------------------------------
+  Bravo                               2008-2013    (120 görsel)
+  Doblo                               2005-2015    (105 görsel)
+  FIAT 500                            2009-2015    (116 görsel)
+  FIAT 500L                           2013-2014    (120 görsel)
+  FIAT Fiorino Qubo                   2009         (59 görsel)
+  FIAT Idea                           2011-2014    (120 görsel)
+  FIAT Panda                          2013-2015    (120 görsel)
+  FIAT Uno                            2011-2015    (111 görsel)
+  Freemont                            ?            (120 görsel)
+  Linea                               2008         (67 görsel)
+  Palio                               2004-2012    (77 görsel)
+  Punto                               2008-2012    (120 görsel)
+
+FORD
+--------------------------------------------------
+  Ecosport                            2012-2013    (120 görsel)
+  Edge                                2010-2015    (120 görsel)
+  Fiesta hatchback                    2009-2014    (120 görsel)
+  Ford B-MAX                          2011-2013    (53 görsel)
+  Ford C-MAX                          2011-2015    (120 görsel)
+  Ford Ka                             2008-2011    (108 görsel)
+  Kuga                                2008-2015    (120 görsel)
+  Mendeo                              2013         (120 görsel)
+  Mustang                             2012-2015    (120 görsel)
+  New Focus hatchback                 2006-2013    (120 görsel)
+  New Focus sedan                     2005-2013    (120 görsel)
+  Ranger                              2008-2012    (55 görsel)
+  S-MAX                               2007-2015    (98 görsel)
+
+HONDA
+--------------------------------------------------
+  Accord                              2010-2014    (120 görsel)
+  City                                2009-2014    (120 görsel)
+  Civic                               2009-2015    (120 görsel)
+  Fit                                 2008-2014    (120 görsel)
+  Honda CR-V                          2010-2013    (120 görsel)
+  Honda HR-V                          2014-2016    (101 görsel)
+  Honda Insight                       2010-2013    (120 görsel)
+
+HYUNDAI
+--------------------------------------------------
+  Accent                              2006-2011    (104 görsel)
+  Elantra                             2004-2011    (120 görsel)
+  Genesis                             2015         (119 görsel)
+  Grand SantaFe                       2013         (119 görsel)
+  Santafe                             2008-2013    (120 görsel)
+  Sonata                              2008-2009    (120 görsel)
+  Tucson                              2006-2013    (119 görsel)
+  Veloster                            2011-2016    (120 görsel)
+  i10                                 2011-2014    (120 görsel)
+  i20                                 2009-2015    (120 görsel)
+  i30                                 2007-2013    (82 görsel)
+  i40                                 2012-2015    (120 görsel)
+  ix20                                2011-2015    (58 görsel)
+  ix25                                2014-2015    (119 görsel)
+  ix35                                2010-2015    (119 görsel)
+
+JEEP
+--------------------------------------------------
+  Cherokee                            2014         (120 görsel)
+  Compass                             2009-2014    (120 görsel)
+  Grand Cherokee                      2004-2014    (120 görsel)
+  Patriot                             2009-2014    (120 görsel)
+  Renegade                            2014-2015    (119 görsel)
+  Wrangler                            2009-2014    (120 görsel)
+
+KIA
+--------------------------------------------------
+  Cerato                              2005-2012    (108 görsel)
+  KIA Ceed                            2010-2015    (120 görsel)
+  KIA K5                              2011-2015    (119 görsel)
+  KIA Picanto                         2012-2015    (120 görsel)
+  KIA venga                           2010-2015    (119 görsel)
+  New Carens                          2011-2013    (113 görsel)
+  RIO                                 2005-2012    (112 görsel)
+  Sedona                              2014-2015    (52 görsel)
+  Sorento                             2009-2015    (120 görsel)
+  Soul                                2010-2015    (120 görsel)
+  Sportage                            2009-2013    (119 görsel)
+
+MAZDA
+--------------------------------------------------
+  Mazda 2                             2011-2015    (117 görsel)
+  Mazda 3                             2010-2012    (120 görsel)
+  Mazda 5                             2010-2013    (120 görsel)
+  Mazda 6                             2007-2015    (118 görsel)
+  Mazda CX-5                          2012-2014    (120 görsel)
+  Mazda CX-9                          2007-2013    (120 görsel)
+  Mazda CX7                           2010-2014    (120 görsel)
+  Mazda MX-5                          2009-2015    (119 görsel)
+
+MERCEDES-BENZ
+--------------------------------------------------
+  Benz A Class                        2011-2015    (119 görsel)
+  Benz B Class                        2012-2015    (120 görsel)
+  Benz C Class                        2011-2015    (120 görsel)
+  Benz C Class estate                 2010-2014    (120 görsel)
+  Benz CLA Class                      2013-2015    (120 görsel)
+  Benz CLS Class                      2012-2015    (120 görsel)
+  Benz E Class                        2009-2015    (120 görsel)
+  Benz E Class convertible            2010-2014    (120 görsel)
+  Benz E Class couple                 2009-2014    (120 görsel)
+  Benz GL Class                       2011-2014    (120 görsel)
+  Benz GLA Class                      2013-2015    (120 görsel)
+  Benz GLK Class                      2008-2014    (120 görsel)
+  Benz M Class                        2010-2014    (120 görsel)
+  Benz S Class                        2010-2015    (120 görsel)
+
+MITSUBISHI
+--------------------------------------------------
+  ASX                                 2013-2015    (120 görsel)
+  Eclipse                             2008-2009    (47 görsel)
+  Evo                                 2006-2012    (82 görsel)
+  Grandis                             2004-2010    (95 görsel)
+  Mirage                              2012-2014    (57 görsel)
+  Mitsubishi Colt                     2005-2009    (75 görsel)
+  Mitsubishi Galant                   2007-2012    (117 görsel)
+  Mitsubishi Lancer                   2006-2015    (119 görsel)
+  Outlander abroad version            2010-2014    (120 görsel)
+  Pajero                              2008-2015    (120 görsel)
+  Pajero Sport                        2011-2014    (120 görsel)
+
+NISSAN
+--------------------------------------------------
+  Nissan Juke                         2011-2015    (120 görsel)
+  Patrol                              ?            (120 görsel)
+  Pulsar                              2014-2015    (120 görsel)
+  Qashqai                             2010-2014    (120 görsel)
+  Teana                               2008-2014    (120 görsel)
+  Tiida                               2011-2014    (120 görsel)
+  X-Trail                             2008-2014    (119 görsel)
+
+OPEL
+--------------------------------------------------
+  Antara                              2009-2013    (120 görsel)
+  GTC hatchback                       2004-2014    (72 görsel)
+  Insignia                            2013-2014    (120 görsel)
+  Meriva                              2006-2014    (119 görsel)
+  Opel Adam                           2013-2015    (120 görsel)
+  Opel CORSA                          2008-2015    (120 görsel)
+  Opel Mokka                          2013         (120 görsel)
+  Zafira                              2013         (120 görsel)
+
+PEUGEOT
+--------------------------------------------------
+  Peugeot 107                         2009-2013    (67 görsel)
+  Peugeot 108                         2015         (101 görsel)
+  Peugeot 2008                        2013-2014    (120 görsel)
+  Peugeot 207 hatchback               2009-2011    (120 görsel)
+  Peugeot 208                         2012-2016    (120 görsel)
+  Peugeot 3008                        2011-2015    (119 görsel)
+  Peugeot 301                         2013-2014    (120 görsel)
+  Peugeot 307 hatchback               2010-2013    (120 görsel)
+  Peugeot 308                         2012-2014    (106 görsel)
+  Peugeot 308SW                       2009-2014    (99 görsel)
+  Peugeot 4008                        2012-2013    (120 görsel)
+  Peugeot 5008                        2010-2014    (66 görsel)
+  Peugeot 508                         2011-2015    (120 görsel)
+
+RENAULT
+--------------------------------------------------
+  Cleo                                2009-2014    (91 görsel)
+  Koleos                              2009-2014    (120 görsel)
+  Laguna                              2008-2012    (120 görsel)
+  Latitude                            2011-2013    (120 görsel)
+  Megan Aa                            2011-2015    (120 görsel)
+  Reno Captur                         2011-2014    (120 görsel)
+  Reno Symbol                         2009-2013    (56 görsel)
+  Reno Twingo                         2012-2015    (120 görsel)
+  Reno ZOE                            2013         (112 görsel)
+
+SEAT
+--------------------------------------------------
+  Alhambra                            2011-2013    (120 görsel)
+  Ibiza                               2009-2014    (120 görsel)
+  Seat ALTEA                          2009-2011    (90 görsel)
+  Seat EXEO                           2009-2010    (120 görsel)
+  Seat LEON                           2012-2015    (120 görsel)
+  Seat Mii                            2013-2014    (120 görsel)
+
+SKODA
+--------------------------------------------------
+  Citigo                              2013         (74 görsel)
+  Fabia                               2008-2015    (120 görsel)
+  Octavia                             2009-2015    (120 görsel)
+  Rapid                               2013-2015    (120 görsel)
+  Rapid Spaceback                     2014         (120 görsel)
+  Roomster                            2006-2011    (61 görsel)
+  Superb                              2013         (120 görsel)
+  Yeti                                2014         (119 görsel)
+
+SUZUKI
+--------------------------------------------------
+  Alto                                2009-2013    (120 görsel)
+  Jimny                               2011-2015    (117 görsel)
+  Swift                               2010-2014    (120 görsel)
+
+TOYOTA
+--------------------------------------------------
+  Avensis                             2009-2015    (120 görsel)
+  Camry                               2008-2015    (120 görsel)
+  Corolla                             2011-2014    (120 görsel)
+  Highlander                          2009-2013    (120 görsel)
+  Toyota Auris                        2010-2016    (120 görsel)
+  Toyota Aygo                         2009-2015    (120 görsel)
+  Toyota Hilux                        2012-2014    (90 görsel)
+  Toyota IQ                           2009-2013    (120 görsel)
+  Toyota Verso                        2010-2014    (120 görsel)
+  Yaris                               2008-2015    (118 görsel)
+
+VOLKSWAGEN
+--------------------------------------------------
+  Amarok Pickup                       2011-2014    (120 görsel)
+  Beetle                              2010-2015    (120 görsel)
+  Caddy abroad version                2011-2016    (73 görsel)
+  Caravelle                           2014         (106 görsel)
+  Golf                                2010-2014    (120 görsel)
+  Golf estate                         2011-2014    (55 görsel)
+  Jetta                               2009-2015    (118 görsel)
+  Multivan                            2006-2015    (120 görsel)
+  Passat                              2011-2015    (120 görsel)
+  Polo hatchback                      2009-2014    (120 görsel)
+  T-ROC                               2014         (56 görsel)
+  Touareg                             2009-2015    (120 görsel)
+  Volkswagen CC                       2009-2013    (120 görsel)
+
+VOLVO
+--------------------------------------------------
+  Volvo C30                           2008-2013    (120 görsel)
+  Volvo C70                           2008-2010    (119 görsel)
+  Volvo S40                           2009-2012    (119 görsel)
+  Volvo S60                           2011-2014    (120 görsel)
+  Volvo S80                           2006-2014    (119 görsel)
+  Volvo V40                           2009-2015    (120 görsel)
+  Volvo V40 CrossCountry              2014         (111 görsel)
+  Volvo V60                           2012-2015    (120 görsel)
+  Volvo V70                           2009-2014    (64 görsel)
+  Volvo XC60                          2009-2015    (120 görsel)
+  Volvo XC70                          2004-2014    (120 görsel)
+  Volvo XC90 abroad version           2008-2015    (120 görsel)
+
+TOPLAM: 25 marka, 252 model
