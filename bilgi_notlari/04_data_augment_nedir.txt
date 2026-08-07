@@ -1,0 +1,32 @@
+DATA AUGMENT NEDİR, NE ZAMAN İŞE YARAR
+
+Var olan etiketli görselleri, pikselini değiştirerek (parlaklık, keskinlik,
+blur, gölge) ÇOĞALTMAK. Kutu konumları (etiketler) değişmez, çünkü bu
+teknikler nesnenin YERİNİ değil, görüntünün IŞIK/NET LİK durumunu
+değiştiriyor — bu yüzden orijinal etiket dosyası aynen kopyalanabiliyor.
+
+İKİ MOD:
+  Sabit: Her görselden, girdiğin SABİT bir ayarla, TEK bir yeni görsel
+         üretilir. Hepsi aynı şekilde değişir.
+  Dinamik: Her görselden istediğin ADET kadar yeni görsel üretilir, her
+         biri için her teknik "taban" ve "hedef" değer arasında RASTGELE
+         seçilir. Daha çeşitli sonuç verir.
+
+FİLTRE: Sadece belirli bir sınıfı (class) içeren görselleri çoğaltmak için
+kullanılır — örneğin en az veriye sahip sınıfı (clio3, 26 görsel) seçip
+sadece onu çoğaltarak sınıflar arası dengesizliği azaltabilirsin.
+
+NE ZAMAN İŞE YARAR, NE ZAMAN YARAMAZ:
+  Augment, IŞIK/NETLİK gibi kamera koşullarına karşı modeli sağlamlaştırır
+  (gerçek kamerada farklı saatlerde/havada çekim yapılacağı için faydalı).
+  AMA yeni bir "açı" veya yeni bir "fiziksel araç örneği" YARATMAZ — var
+  olan fotoğrafı bozarak yeni bilgi eklemiyor, sadece pikselleri değiştiriyor.
+  Yani asıl darboğaz (az çeşitlilik, az farklı araç/açı) augment ile TAM
+  çözülmez — onun için gerçekten yeni ve farklı fotoğraf toplamak gerekir.
+  Augment bir "ek katkı", tek başına çözüm değil.
+
+ÇIKTI NEREYE YAZILIR: Girdi klasörünün YANINA, ayrı bir klasöre (orijinal
+veriye asla dokunulmaz). Train setine augment uyguladıysan, çıktıyı
+manuel olarak split/images/train ve split/labels/train klasörlerine
+kopyalaman gerekiyor (dosya adları zaten "_aug1" gibi bittiği için
+orijinallerle çakışmıyor, sürükle-bırak yeterli).

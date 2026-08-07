@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Fusion — Kapalı</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani">
+    <h1>Fusion (Plaka + Marka/Model)</h1>
+    <p class="aciklama">
+      Bu araç, bu Toolset kopyasında VARSAYILAN OLARAK KAPALI. Sebebi:
+      Fusion, belirli bir projeye (araç plakası + marka/model tanıma) özel
+      bir araç — nevfel.txt'nin istediği evrensel 5 araçlık setin (Etiketleme,
+      Splitter, Augment, Eğitim, Test) parçası değil, herkesin arayüzünde
+      işe yaramaz. Yine de istersen tek tıkla açabilirsin:
+    </p>
+    <button type="button" id="fusion-ac-btn" class="yukle-btn">Fusion'ı Aç</button>
+    <p id="fusion-ac-hata" class="hata"></p>
+  </section>
+
+  <script>
+    document.getElementById("fusion-ac-btn").addEventListener("click", async () => {
+      const hataEl = document.getElementById("fusion-ac-hata");
+      hataEl.textContent = "";
+      try {
+        const cevap = await fetch("/api/ayarlar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gelismis_ozellikler_acik: true }),
+        });
+        if (!cevap.ok) throw new Error("İstek başarısız");
+        window.location.href = "/fusion";
+      } catch (e) {
+        hataEl.textContent = "Açılamadı, tekrar dene.";
+      }
+    });
+  </script>
+</body>
+</html>

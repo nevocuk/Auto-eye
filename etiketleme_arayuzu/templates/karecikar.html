@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Video'dan Kare Çıkar</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani">
+    <h1>Video'dan Kare Çıkar</h1>
+    <p class="aciklama">
+      Bir videodan (vlog, dashcam, kendi çektiğin video vb.) seyrek aralıklarla
+      kare çıkarıp .jpg olarak kaydeder. Amaç: Ön-Etiketleme veya Etiketleme
+      arayüzüne girecek ham görselleri üretmek. Saniyede TÜM kareleri almak
+      yerine seyrek (varsayılan fps=1) örnekliyoruz -- yoksa art arda gelen
+      kareler neredeyse birebir aynı görüntü olur, gerçek çeşitlilik katmaz.
+    </p>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>Video Dosyası</strong> <span class="zorunlu">(zorunlu)</span>
+        <div class="secili-yol" id="video_yolu_goster">— seçilmedi —</div>
+      </div>
+      <button type="button" class="dosya-sec-btn" data-hedef="video_yolu" data-tur="video">DOSYA SEÇ</button>
+    </div>
+
+    <label class="siniflar-label">Çıktı klasörü adı
+      <span class="opsiyonel">(videonun bulunduğu klasörün yanında otomatik oluşturulur)</span>
+      <input type="text" id="cikti_adi" value="ham_kareler">
+    </label>
+    <div class="secili-yol" id="cikti_klasoru_goster">— önce video seç —</div>
+
+    <label class="siniflar-label">Saniyede kaç kare (fps)
+      <span class="opsiyonel">(1 = saniyede 1 kare, 0.5 = 2 saniyede 1 kare -- düşük tut, art arda neredeyse aynı kareler işe yaramaz)</span>
+      <input type="number" id="fps" value="1" min="0.05" step="0.05">
+    </label>
+
+    <button type="button" id="calistir-btn" class="yukle-btn">KARE ÇIKAR</button>
+    <p id="karecikar-hata" class="hata"></p>
+
+    <div id="sonuc-kutu" class="onizleme-kutusu gizli"></div>
+  </section>
+
+  <script src="/static/karecikar.js"></script>
+</body>
+</html>

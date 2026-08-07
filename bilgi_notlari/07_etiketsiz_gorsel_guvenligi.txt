@@ -1,0 +1,27 @@
+ETİKETLENMEMİŞ GÖRSELİ NEREYE ATMALIYIM, KARIŞIR MI
+
+Etiketlenmemiş (henüz kutu çizilmemiş) bir görseli, etiketlenmiş
+görsellerle AYNI klasöre (veri/images/) atabilirsin. Bu, Etiketleme
+arayüzünün zaten beklediği normal kullanım şekli: ham fotoğrafları
+images/ klasörüne atıp, arayüzü açıp sırayla etiketlersin. Henüz
+etiketlenmemiş olanlar listede "-" ile, etiketlenmiş olanlar "OK" ile
+görünür.
+
+GÜVENLİK KONTROLÜ (otomatik, elle bir şey yapmana gerek yok):
+Dataset Splitter ve Data Augment (ve eski 04_veri_birlestir.py script'i),
+bir görseli işleme almadan önce onun DOLU (boş olmayan) bir .txt etiket
+dosyası olup olmadığını kontrol ediyor:
+
+  - Etiket dosyası yoksa -> görsel dışlanır, "eksik etiket" olarak sayılır.
+  - Etiket dosyası var ama İÇİ BOŞSA (0 byte) -> yine dışlanır, aynı
+    şekilde sayılır.
+  - Sadece DOLU bir etiket dosyası olan görseller train/val/test'e veya
+    augment çıktısına dahil edilir.
+
+Yani unutup etiketlemediğin bir görsel, sessizce eğitime KARIŞMAZ — ama
+seni otomatik olarak UYARMAZ da, sadece sayıyı gösterir. Splitter'da
+"ÖNİZLE" dediğinde ya da Augment'te önizleme yaptığında ekranda
+"toplam_gorsel" ile "eslesen/eslesen (etiketli)" sayısını ayrı ayrı
+gösteriyor — aradaki fark, henüz etiketlemediğin görsel sayısıdır. Bu
+farkı 0 olana kadar (ya da bilerek dışarıda bıraktığın kadar) kapatman
+kendi kontrolünde.

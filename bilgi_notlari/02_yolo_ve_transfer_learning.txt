@@ -1,0 +1,30 @@
+YOLO NE YAPAR, "TRANSFER LEARNING" NEDİR
+
+YOLO (You Only Look Once): bir görseldeki nesneleri hem BULAN (nerede,
+hangi kutu içinde) hem SINIFLANDIRAN (ne olduğu) bir model ailesi.
+"Detect" görevinde çıktı: her nesne için bir kutu (x,y,genişlik,yükseklik)
++ bir sınıf adı + bir güven skoru (0-1 arası, ne kadar eminmiş).
+
+Biz `yolo11n.pt` denen, Ultralytics'in COCO veri setinde (milyonlarca
+görsel, 80 genel kategori — biri de "araba") ÖNCEDEN eğittiği hazır bir
+model kullanıyoruz. Sıfırdan başlamıyoruz.
+
+TRANSFER LEARNING (aktarımlı öğrenme): önceden başka bir görevde
+öğrenilmiş bilgiyi, yeni ve daha dar bir göreve aktarmak. Bizim
+durumumuzda: model zaten "araba nasıl görünür" biliyor (tekerlek, cam,
+kaporta silueti gibi genel görsel örüntüler COCO eğitiminden geldi). Biz
+"fine-tune" (ince ayar) yaptığımızda, modelin bu genel bilgisini
+SİLMİYORUZ, sadece son katmanlarını KENDİ 3 sınıfımızı (clio3/clio4/egea)
+ayırt edecek şekilde güncelliyoruz.
+
+Bunun pratik sonucu: 155 gibi küçük bir veri setiyle bile makul sonuç
+alabiliyoruz. Eğer sıfırdan (rastgele ağırlıklarla) eğitseydik, önce
+"araba nedir" bilgisini de öğretmemiz gerekirdi, bunun için on binlerce
+görsel ve çok daha uzun eğitim lazım olurdu.
+
+Bizim eğitim komutumuzda bunu şu satır sağlıyor:
+
+  model = YOLO("yolo11n.pt")   # hazır ağırlıklarla başla, sıfırdan değil
+  model.train(data="data.yaml", epochs=100, ...)
+
+Hiçbir özel "arabayı öğren" ayarı yapmadık, çünkü buna gerek yoktu.

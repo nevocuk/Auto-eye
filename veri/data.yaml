@@ -1,0 +1,16 @@
+# YOLO detect veri seti tanımı — marka/model tanıma (Bileşen 3)
+# Bu dosya + images/ + labels/ klasörleri, standart YOLO detect formatı.
+# (Not: renault_clio3/, renault_clio4/, fiat_egea/ klasörleri artık
+# kullanılmıyor — o classify yaklaşımının kalıntısıydı, detect'e geçince
+# tüm görseller tek 'images/' klasöründe, etiketler 'labels/' klasöründe
+# toplanıyor, sınıf ayrımı klasörle değil etiket dosyasındaki sınıf ID'siyle
+# yapılıyor.)
+
+train: images   # Adım 5'te train/val/test'e böleceğiz, şimdilik hepsi burada
+val: images
+test: images
+
+names:
+  0: renault_clio3
+  1: renault_clio4
+  2: fiat_egea

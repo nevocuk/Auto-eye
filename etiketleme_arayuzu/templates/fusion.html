@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Fusion (Plaka + Marka/Model)</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani genis">
+    <h1>Fusion — Plaka + Marka/Model Birleştirme</h1>
+    <p class="aciklama">
+      İki ayrı modeli (plaka tespiti + kendi marka/model modeliniz) AYNI
+      görsel üzerinde çalıştırıp sonuçları TEK bir kayıtta birleştirir:
+      her araç için plaka metni + marka/model, ikisi de "kesin / muhtemel /
+      belirsiz" güven seviyesiyle. Aşağıdaki log kutusu her adımı
+      (marka/model tespiti &rarr; plaka tespiti &rarr; OCR &rarr;
+      eşleştirme) sırayla gösterir.
+    </p>
+
+    <div class="test-mod-satiri">
+      <button type="button" class="test-mod-btn test-mod-aktif" data-mod="tekli">Tekli Görsel</button>
+      <button type="button" class="test-mod-btn" data-mod="izleme">Sürekli İzleme (Video)</button>
+    </div>
+
+    <!-- ================= TEKLİ GÖRSEL MODU ================= -->
+    <div id="mod-tekli" class="egitim-grid">
+      <div class="egitim-sol">
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Marka/Model Modeli</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="marka_model_dosyasi_goster">— seçilmedi (örn. best.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="marka_model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Plaka Modeli</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="plaka_model_dosyasi_goster">— seçilmedi (örn. models/plaka_tespit.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="plaka_model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Test Görseli</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="gorsel_dosyasi_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="gorsel_dosyasi" data-tur="gorsel">DOSYA SEÇ</button>
+        </div>
+
+        <button type="button" id="fusion-btn" class="yukle-btn">ÇALIŞTIR</button>
+        <p id="fusion-hata" class="hata"></p>
+
+        <div id="fusion-sonuc-tablo" class="onizleme-kutusu gizli"></div>
+
+        <div class="kutu-baslik-satiri">
+          <span></span>
+        </div>
+        <pre id="fusion-log" class="analiz-kutusu gizli"></pre>
+      </div>
+
+      <div class="egitim-sag">
+        <img id="fusion-sonuc-gorsel" class="test-sonuc-gorsel gizli" alt="Fusion sonucu">
+      </div>
+    </div>
+
+    <!-- ================= SÜREKLİ İZLEME MODU (video) ================= -->
+    <div id="mod-izleme" class="egitim-grid gizli">
+      <div class="egitim-sol">
+        <p class="aciklama">
+          Bir video dosyasını (ya da canlı webcam'i) kare kare işler; her
+          fiziksel aracı (takip kimliğiyle -- ByteTrack) kadrajda kaldığı
+          SÜRE BOYUNCA izleyip en iyi plaka okumasını/en yüksek güvenli
+          marka-model tahminini biriktirir, araç kadrajdan çıkınca (ya da
+          video bitince) TEK bir kayıt olarak veritabanına yazar -- aynı
+          araç tekrar tekrar kaydedilmez. Bu, sabit güvenlik kamerası
+          senaryosunun (#9) uygulaması.
+        </p>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Marka/Model Modeli</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="izleme_marka_model_dosyasi_goster">— seçilmedi (örn. best.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="izleme_marka_model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Plaka Modeli</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="izleme_plaka_model_dosyasi_goster">— seçilmedi (örn. models/plaka_tespit.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="izleme_plaka_model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+        </div>
+
+        <label class="siniflar-label">Kaynak
+          <span class="opsiyonel">(video dosyası ya da bilgisayarın webcam'i)</span>
+        </label>
+        <div class="test-mod-satiri" style="margin-bottom:12px;">
+          <button type="button" class="izleme-kaynak-btn izleme-kaynak-aktif" data-izleme-kaynak="video">Video Dosyası</button>
+          <button type="button" class="izleme-kaynak-btn" data-izleme-kaynak="webcam">Webcam</button>
+        </div>
+
+        <div id="izleme-video-secim" class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Video</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="izleme_video_dosyasi_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="izleme_video_dosyasi" data-tur="video">DOSYA SEÇ</button>
+        </div>
+
+        <label class="siniflar-label">Confidence eşiği
+          <input type="number" id="izleme_conf" value="0.25" min="0" max="1" step="0.05">
+        </label>
+
+        <button type="button" id="izleme-baslat-btn" class="yukle-btn">İZLEMEYİ BAŞLAT</button>
+        <button type="button" id="izleme-durdur-btn" class="klasor-degistir-btn-duz gizli">Durdur</button>
+        <p id="izleme-hata" class="hata"></p>
+
+        <div id="izleme-durum-satiri" class="onizleme-kutusu gizli"></div>
+
+        <div class="kutu-baslik-satiri">
+          <span></span>
+        </div>
+        <pre id="izleme-log" class="analiz-kutusu gizli"></pre>
+      </div>
+
+      <div class="egitim-sag">
+        <img id="izleme-webcam-goruntu" class="test-sonuc-gorsel gizli" alt="İzleme canlı görüntü">
+      </div>
+    </div>
+  </section>
+
+  <script src="/static/fusion.js"></script>
+</body>
+</html>

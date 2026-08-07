@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gereklilikler</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani">
+    <h1>Gereklilikler</h1>
+    <p class="aciklama">
+      Bu araçların (Model Eğitimi, Model Test, Ön-Etiketleme, Video'dan Kare
+      Çıkar) çalışması için gereken kütüphaneleri ve hazır COCO modelini
+      (yolo11n.pt) buradan kontrol edip tek tuşla kurabilirsin. <strong>Not:</strong>
+      bu sayfanın açılabilmesi için flask/pywebview/numpy/Pillow zaten kurulu
+      olmalı (proje klasöründeki KURULUM.bat ilk kurulumu yapar) — bu kutu
+      ondan SONRA, ağır ve modüle göre opsiyonel olan bağımlılıkları
+      (ultralytics, opencv-python, torch gibi) kurmak için var.
+    </p>
+
+    <button type="button" id="kontrol-btn" class="klasor-degistir-btn-duz">DURUMU KONTROL ET</button>
+    <div id="gpu-bilgisi" class="onizleme-kutusu gizli"></div>
+
+    <table class="gereklilik-tablo" id="paket-tablosu" style="margin-top:16px;">
+      <thead>
+        <tr><th>Paket</th><th>Durum</th><th>Hangi araç(lar) için</th></tr>
+      </thead>
+      <tbody id="paket-govde">
+        <tr><td colspan="3">Henüz kontrol edilmedi -- "DURUMU KONTROL ET" butonuna bas.</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:24px;">Opsiyonel (Fusion için, proje-özel)</h3>
+    <table class="gereklilik-tablo" id="opsiyonel-tablosu">
+      <thead>
+        <tr><th>Paket</th><th>Durum</th><th>Hangi araç(lar) için</th></tr>
+      </thead>
+      <tbody id="opsiyonel-govde">
+        <tr><td colspan="3">Henüz kontrol edilmedi.</td></tr>
+      </tbody>
+    </table>
+
+    <div id="yolo-durumu" class="onizleme-kutusu gizli" style="margin-top:16px;"></div>
+
+    <div class="augment-mod-satiri" style="margin-top:20px;">
+      <label><input type="checkbox" id="opsiyonel_de_kur"> Fusion'ın opsiyonel paketlerini de kur (fast-plate-ocr, pillow-heif)</label>
+    </div>
+    <div class="augment-mod-satiri">
+      <label><input type="checkbox" id="gpu_kullan" checked> GPU (NVIDIA/CUDA) varsa onu kullanacak şekilde torch kur <span class="opsiyonel">(GPU bulunamazsa otomatik CPU'lu kurulur)</span></label>
+    </div>
+
+    <button type="button" id="kur-btn" class="yukle-btn">EKSİKLERİ KUR</button>
+    <p id="gereklilik-hata" class="hata"></p>
+
+    <div id="kurulum-durum-satiri" class="onizleme-kutusu gizli"></div>
+    <pre id="kurulum-log" class="analiz-kutusu gizli"></pre>
+  </section>
+
+  <script src="/static/gereklilikler.js"></script>
+</body>
+</html>

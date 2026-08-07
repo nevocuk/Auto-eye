@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Veri Birleştir</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani">
+    <h1>Veri Birleştir</h1>
+    <p class="aciklama">
+      Etiketleme sırasında sınıf başına ayrı klasörlerde topladığın (örn.
+      kedi/, kopek/, kus/... ya da sinif1/, sinif2/...) görselleri, SADECE etiketlenmiş
+      olanları sınıf adı ön ekiyle (çakışma olmasın diye) tek bir
+      images/+labels/ yapısına kopyalar -- eğitime hazır hale getirir.
+      Orijinal klasörlere dokunmaz (kopyalar, taşımaz), tekrar
+      çalıştırınca sadece yenileri ekler.
+    </p>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>Kaynak Klasörler</strong> <span class="zorunlu">(en az 1 tane, birden fazla eklenebilir)</span>
+      </div>
+      <button type="button" id="klasor-ekle-btn" class="klasor-sec-btn">KLASÖR EKLE</button>
+    </div>
+    <ul id="kaynak-listesi"></ul>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>Çıktı Klasörü</strong> <span class="zorunlu">(zorunlu, örn. veri/)</span>
+        <div class="secili-yol" id="cikti_klasoru_goster">— seçilmedi —</div>
+      </div>
+      <button type="button" id="cikti-sec-btn" class="klasor-sec-btn">KLASÖR SEÇ</button>
+    </div>
+
+    <button type="button" id="calistir-btn" class="yukle-btn">BİRLEŞTİR</button>
+    <p id="birlestir-hata" class="hata"></p>
+
+    <pre id="sonuc-kutu" class="analiz-kutusu gizli"></pre>
+  </section>
+
+  <script src="/static/veribirlestir.js"></script>
+</body>
+</html>

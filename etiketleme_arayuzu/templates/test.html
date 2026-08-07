@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Model Test</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani genis">
+    <h1>Model Test</h1>
+    <p class="aciklama">
+      Eğitilmiş bir modeli (best.pt gibi) görsel, video ya da canlı
+      webcam üzerinde çalıştırır. Tespit edilen nesnelerin üstüne sınıf
+      adı ve güven skoru, üstüne de fps/süre bilgisi çizilir. "Metrikler
+      (mAP)" sekmesi ise tek bir görsel yerine etiketli bir val setiyle
+      modelin gerçek performansını (mAP50, mAP50-95, precision, recall)
+      ölçer.
+    </p>
+
+    <div class="test-mod-satiri">
+      <button type="button" class="test-mod-btn test-mod-aktif" data-mod="gorsel">Görsel</button>
+      <button type="button" class="test-mod-btn" data-mod="video">Video</button>
+      <button type="button" class="test-mod-btn" data-mod="webcam">Webcam</button>
+      <button type="button" class="test-mod-btn" data-mod="klasor">Klasör (Toplu)</button>
+      <button type="button" class="test-mod-btn" data-mod="metrik">Metrikler (mAP)</button>
+    </div>
+
+    <!-- ================= GÖRSEL MODU ================= -->
+    <div id="mod-gorsel" class="egitim-grid">
+      <div class="egitim-sol">
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Model</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="model_dosyasi_goster">— seçilmedi (örn. best.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="model_dosyasi">DOSYA SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Test Görseli</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="gorsel_dosyasi_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="gorsel_dosyasi">DOSYA SEÇ</button>
+        </div>
+
+        <label class="siniflar-label">Confidence eşiği
+          <span class="opsiyonel">(bunun altındaki tahminler gösterilmez, 0-1 arası)</span>
+          <input type="number" id="conf" value="0.25" min="0" max="1" step="0.05">
+        </label>
+
+        <button type="button" id="test-btn" class="yukle-btn">TEST ET</button>
+        <p id="test-hata" class="hata"></p>
+
+        <div id="tespit-listesi-kutu" class="onizleme-kutusu gizli"></div>
+      </div>
+
+      <div class="egitim-sag">
+        <img id="sonuc-gorsel" class="test-sonuc-gorsel gizli" alt="Test sonucu">
+      </div>
+    </div>
+
+    <!-- ================= VİDEO MODU ================= -->
+    <div id="mod-video" class="egitim-grid gizli">
+      <div class="egitim-sol">
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Model</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="video_model_dosyasi_goster">— seçilmedi (örn. best.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="video_model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Test Videosu</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="video_dosyasi_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="video_dosyasi" data-tur="video">DOSYA SEÇ</button>
+        </div>
+
+        <label class="siniflar-label">Confidence eşiği
+          <input type="number" id="video_conf" value="0.25" min="0" max="1" step="0.05">
+        </label>
+
+        <button type="button" id="video-test-btn" class="yukle-btn">VİDEOYU İŞLE</button>
+        <p id="video-test-hata" class="hata"></p>
+
+        <div id="video-durum-satiri" class="onizleme-kutusu gizli"></div>
+      </div>
+
+      <div class="egitim-sag">
+        <video id="sonuc-video" class="test-sonuc-gorsel gizli" controls></video>
+      </div>
+    </div>
+
+    <!-- ================= WEBCAM MODU ================= -->
+    <div id="mod-webcam" class="egitim-grid gizli">
+      <div class="egitim-sol">
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Model</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="webcam_model_dosyasi_goster">— seçilmedi (örn. best.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="webcam_model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+        </div>
+
+        <label class="siniflar-label">Confidence eşiği
+          <input type="number" id="webcam_conf" value="0.25" min="0" max="1" step="0.05">
+        </label>
+
+        <button type="button" id="webcam-baslat-btn" class="yukle-btn">WEBCAM'İ BAŞLAT</button>
+        <button type="button" id="webcam-durdur-btn" class="klasor-degistir-btn-duz gizli">Durdur</button>
+        <p id="webcam-hata" class="hata"></p>
+
+        <div id="webcam-durum-satiri" class="onizleme-kutusu gizli"></div>
+      </div>
+
+      <div class="egitim-sag">
+        <img id="webcam-goruntu" class="test-sonuc-gorsel gizli" alt="Webcam canlı görüntü">
+      </div>
+    </div>
+
+    <!-- ================= KLASÖR (TOPLU) MODU ================= -->
+    <div id="mod-klasor" class="gizli">
+      <p class="aciklama">
+        Etiketsiz bir klasördeki (ör. kendi çektiğin ya da indirdiğin
+        fotoğraflar) TÜM görselleri tek seferde işler, her birinde
+        modelin bulduğu kutuları/sınıfları çizip aşağıda bir galeri
+        olarak gösterir. Ground-truth etiket gerekmez, sadece gözle
+        kontrol içindir (nesnel ölçüm için "Metrikler" sekmesini kullan).
+        Tek seferde en fazla 500 görsel işlenir.
+      </p>
+
+      <div class="secim-satiri">
+        <div class="secim-etiket">
+          <strong>Model</strong> <span class="zorunlu">(zorunlu)</span>
+          <div class="secili-yol" id="klasor_model_dosyasi_goster">— seçilmedi (örn. best.pt) —</div>
+        </div>
+        <button type="button" class="dosya-sec-btn" data-hedef="klasor_model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+      </div>
+
+      <div class="secim-satiri">
+        <div class="secim-etiket">
+          <strong>Görsel Klasörü</strong> <span class="zorunlu">(zorunlu)</span>
+          <div class="secili-yol" id="klasor_goster">— seçilmedi —</div>
+        </div>
+        <button type="button" class="klasor-sec-btn dosya-sec-btn" data-hedef="klasor">KLASÖR SEÇ</button>
+      </div>
+
+      <label class="siniflar-label">Confidence eşiği
+        <input type="number" id="klasor_conf" value="0.25" min="0" max="1" step="0.05">
+      </label>
+
+      <button type="button" id="klasor-test-btn" class="yukle-btn">KLASÖRÜ TEST ET</button>
+      <p id="klasor-test-hata" class="hata"></p>
+      <div id="klasor-durum-satiri" class="onizleme-kutusu gizli"></div>
+
+      <div id="klasor-galeri" class="klasor-galeri-grid"></div>
+    </div>
+
+    <!-- Klasör galerisi için büyütme (lightbox) katmanı -->
+    <div id="klasor-lightbox" class="klasor-lightbox gizli">
+      <img id="klasor-lightbox-img" src="">
+    </div>
+
+    <!-- ================= METRİKLER (mAP) MODU ================= -->
+    <div id="mod-metrik" class="egitim-grid gizli">
+      <div class="egitim-sol">
+        <p class="aciklama">
+          Bir model dosyası + ETİKETLİ bir val seti içeren data.yaml
+          seçip modelin gerçek performansını (mAP50, mAP50-95,
+          precision, recall) ölçer. Tek bir görselde mAP hesaplanamaz --
+          gerçek/ground-truth etiket gerekir (örn. Dataset Splitter'ın
+          ürettiği data.yaml).
+        </p>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>Model</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="metrik_model_dosyasi_goster">— seçilmedi (örn. best.pt) —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="metrik_model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+        </div>
+
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>data.yaml (val içeren)</strong> <span class="zorunlu">(zorunlu)</span>
+            <div class="secili-yol" id="metrik_data_yaml_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="dosya-sec-btn" data-hedef="metrik_data_yaml" data-tur="yaml">DOSYA SEÇ</button>
+        </div>
+
+        <button type="button" id="metrik-btn" class="yukle-btn">METRİKLERİ HESAPLA</button>
+        <p id="metrik-hata" class="hata"></p>
+
+        <div id="metrik-durum-satiri" class="onizleme-kutusu gizli"></div>
+      </div>
+
+      <div class="egitim-sag">
+        <div id="metrik-sonuc-kutu" class="onizleme-kutusu gizli"></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/static/test.js"></script>
+</body>
+</html>

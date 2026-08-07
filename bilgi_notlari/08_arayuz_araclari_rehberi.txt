@@ -1,0 +1,173 @@
+ARAYÜZ (TOOLSET) REHBERİ — HANGİ ARAÇ NE İŞE YARIYOR, KOD NEREDE
+
+Bu dosya, etiketleme_arayuzu/ klasöründeki uygulamanın YÜZEYSEL bir
+haritası — "bu ne işe yarıyor, hangi dosyaya bakmalıyım" sorusuna hızlı
+cevap için. Detaylı/teknik anlatım koddaki yorum satırlarında (her
+bölümün başında "====" ile ayrılmış açıklama blokları var).
+
+===============================================================
+1) GENEL MİMARİ — NEDEN BÖYLE ÇALIŞIYOR
+===============================================================
+
+- Uygulama bir web sitesi GİBİ çalışıyor (Flask = Python'da küçük bir
+  web sunucusu kütüphanesi) ama tarayıcıda değil, "pywebview" sayesinde
+  gerçek bir masaüstü uygulaması penceresinde açılıyor.
+- Neden yerel sunucu: bilgisayarındaki KEYFİ bir klasörü (senin
+  seçtiğin herhangi bir yerdeki görsel/video klasörünü) okuyup
+  yazabilmemiz gerekiyor. Normal bir web sayfası (tarayıcı güvenliği
+  yüzünden) bunu yapamaz, ama kendi bilgisayarında çalışan bir Python
+  programı yapabilir.
+- app.py = "beyin" (backend). Senin tıkladığın her buton, arka planda
+  app.py'deki bir Python fonksiyonuna (route'a) bir istek gönderiyor,
+  o fonksiyon dosya okuyor/yazıyor/model çalıştırıyor, sonucu geri
+  gönderiyor.
+- templates/*.html = her aracın GÖRÜNEN sayfası (düğmeler, kutular).
+- static/*.js = her aracın "tıklayınca ne olsun" mantığı (buton
+  tıklamaları, dosya seçme, sonucu ekrana yazma).
+- static/style.css = hepsinin ortak görünümü (renkler, kutular).
+
+===============================================================
+2) ANA MENÜ (HUB)
+===============================================================
+Dosya: templates/index.html
+Uygulamayı açınca gördüğün ilk ekran — 9 aracın kartı, her birine
+tıklayınca ilgili sayfa açılıyor. "← Toolset" linkiyle her araçtan
+buraya dönebiliyorsun.
+
+===============================================================
+3) DATA ETİKETLEME (/etiketleme)
+===============================================================
+Dosyalar: templates/etiketleme.html, static/app.js
+Ne işe yarar: bir görsel klasörü seçip, fare ile araçların etrafına
+kutu çizip hangi class (renault_clio3, egea, vs.) olduğunu
+işaretlediğin ana araç. Her kutu, YOLO formatında bir .txt dosyasına
+(aynı isimde, images/'in yanındaki labels/ klasöründe) otomatik
+kaydediliyor.
+
+Öne çıkan özellikler:
+- Zoom (Ctrl+tekerlek), gezinme (orta tuş sürükle), sağ tık = kutu sil.
+- Rakam tuşları (1-9) = aktif class seç; bir kutu SEÇİLİYKEN rakam
+  tuşuna basmak, o kutunun class'ını değiştirir (yanlış etiketi
+  düzeltmek için).
+- Kutu listesindeki dropdown'dan da class değiştirilebiliyor.
+- Numpad1 / "." = görseli "sonra tekrar kontrol et" diye işaretle
+  (bayrak, kırmızı nokta olarak görünür).
+- Shift+Delete / "L" = görseli kalıcı sil (uygun olmayan fotoğrafları
+  elemek için).
+
+===============================================================
+4) DATASET SPLITTER (/splitter)
+===============================================================
+Dosyalar: templates/splitter.html, static/splitter.js
+Ne işe yarar: etiketlenmiş images/+labels/ klasörünü train (eğitim) /
+val (doğrulama) / test (sınama) olarak rastgele böler — bir modelin
+gerçekten öğrenip öğrenmediğini görmediği verilerle test edebilmek
+için bu ayrım şart. Çıktı olarak yeni bir data.yaml + analiz.txt
+(kaç görsel/class nereye gitti raporu) üretir.
+
+===============================================================
+5) DATA AUGMENT (/augment)
+===============================================================
+Dosyalar: templates/augment.html, static/augment.js
+Ne işe yarar: var olan etiketli görselleri parlaklık/keskinlik/blur/
+gölge gibi tekniklerle ÇOĞALTIR (etiketler otomatik aynı kalır, kutu
+konumları değişmez). Amaç: modelin farklı ışık/netlik koşullarına
+karşı daha dayanıklı olması. SADECE train klasörüne uygulanmalı (val/
+test'e asla — yoksa sonuçlar yanıltıcı çıkar).
+
+===============================================================
+6) MODEL EĞİTİMİ (/egitim)
+===============================================================
+Dosyalar: templates/egitim.html, static/egitim.js
+Ne işe yarar: bir başlangıç modeli (örn. yolo11n.pt/yolo11s.pt) +
+data.yaml + eğitim ayarları (epochs, image size, batch, patience...)
+verip GERÇEK YOLO eğitimini başlatır. Arka planda ayrı bir thread'de
+çalışır, epoch epoch ilerleme/metrikleri canlı gösterir. Eğitim
+bitince en iyi modelin (best.pt) yolu ekranda görünür.
+
+===============================================================
+7) MODEL TEST (/test)
+===============================================================
+Dosyalar: templates/test.html, static/test.js
+Ne işe yarar: eğitilmiş bir modeli (best.pt) bir GÖRSEL, VİDEO veya
+CANLI WEBCAM üzerinde çalıştırıp tespit sonuçlarını (kutu + class adı +
+güven skoru + FPS/süre HUD'u) gösterir. Video işlenince/görsel test
+edilince "Farklı Kaydet..." butonuyla sonucu bilgisayarına
+kaydedebiliyorsun. Webcam modu anlık/canlı akış üzerinde çalışır,
+kayıt dosyası üretmez. Dördüncü bir "Metrikler (mAP)" sekmesi var:
+model + val içeren bir data.yaml seçilir, arka planda ultralytics'in
+model.val() fonksiyonu çalıştırılır (uzun sürebileceği için thread +
+polling ile, video modundaki aynı desen), sonuçta mAP50/mAP50-95/
+precision/recall sayıları gösterilir (nevfel.txt madde 5'in istediği
+mAP gereksinimi).
+
+===============================================================
+8) ÖN-ETİKETLEME (/onetiketleme)
+===============================================================
+Dosyalar: templates/onetiketleme.html, static/onetiketleme.js
+Ne işe yarar: bir klasördeki TÜM görsellerin aynı class'a ait olduğunu
+zaten biliyorsan (örn. "bu klasördeki hepsi megane"), elle kutu çizmek
+yerine hazır bir modelin (varsayılan yolo11n.pt, aracın nerede olduğunu
+zaten biliyor) o kutuyu bulmasını sağlayıp otomatik etiketletir. Sen
+sadece sonucu Etiketleme arayüzünden kontrol edip düzeltiyorsun. Tek
+araç net görünen fotoğraflarda güvenli, kalabalık sahnelerde riskli.
+
+===============================================================
+9) VİDEO'DAN KARE ÇIKAR (/karecikar)
+===============================================================
+Dosyalar: templates/karecikar.html, static/karecikar.js
+Ne işe yarar: bir video dosyasından (vlog, dashcam, kendi kayıt)
+seyrek aralıklarla (varsayılan saniyede 1 kare) görsel çıkarıp ham
+veri üretir — Ön-Etiketleme/Etiketleme'ye girecek görselleri hazırlar.
+Aynı iş bağımsız bir komut satırı script'iyle de yapılabilir:
+kod/05_video_kare_cikar.py.
+
+===============================================================
+10) VERİ BİRLEŞTİR (/veribirlestir)
+===============================================================
+Dosyalar: templates/veribirlestir.html, static/veribirlestir.js
+Ne işe yarar: sınıf başına ayrı toplanan klasörleri (clio3/, egea/,
+megane/ gibi) SADECE etiketlenmiş olanları alıp, class adı ön ekiyle
+(çakışma olmasın diye) tek bir images/+labels/ yapısına kopyalar —
+eğitime hazır hale getirir. Orijinal klasörlere dokunmaz (kopyalar,
+taşımaz). Aynı iş kod/04_veri_birlestir.py ile komut satırından da
+yapılabilir.
+
+===============================================================
+11) FUSION — PLAKA + MARKA/MODEL BİRLEŞTİRME (/fusion)
+===============================================================
+Dosyalar: templates/fusion.html, static/fusion.js
+Bu araç diğerlerinden farklı — nevfel.txt'nin istediği evrensel setin
+DIŞINDA, doğrudan OtoGöz projesine özel. İKİ mod var (üstteki sekmeler):
+
+1) "Tekli Görsel" — İKİ modeli (kendi marka/model modeliniz + plaka
+   tespit modeli) AYNI görselde çalıştırıp sonuçları TEK bir kayıtta
+   birleştiriyor: her araç için plaka metni (OCR ile okunmuş) +
+   marka/model, ikisi de "kesin/muhtemel/belirsiz" güven seviyesiyle.
+   Log kutusu her adımı (marka/model tespiti -> plaka tespiti -> OCR ->
+   eşleştirme) sırayla gösteriyor. Aynı mantığın komut satırından tek
+   başına çalıştırılabilen hali: kod/06_fusion.py.
+
+2) "Sürekli İzleme (Video)" — bir video dosyasını baştan sona
+   izleyip, ByteTrack tabanlı takip (model.track) ile her aracı
+   kadrajda kaldığı SÜRE BOYUNCA takip eder, plaka OCR'ı her karede
+   yeniden dener ve araç kadrajdan kaybolunca (ya da video bitince) o
+   araç için elde edilen EN İYİ sonucu kaydeder. Aynı fiziksel araca
+   tracker'ın kısa bir kopma sonucu yeni ID vermesine karşı bir
+   zaman+plaka penceresi güvenlik ağı var.
+
+Her iki mod da sonucu, projenin köküne yakın db/otogoz.db (SQLite,
+"tespitler" tablosu) içine BİRİKİMLİ olarak yazar — geçmiş kaybolmaz.
+Şema detayı: kod/07_veritabani.py.
+
+===============================================================
+KISACA SIRA (BİR MODELİ SIFIRDAN EĞİTMEK İSTERSEN)
+===============================================================
+1. Video'dan Kare Çıkar / kendi fotoğrafların -> ham görseller
+2. Ön-Etiketleme -> otomatik ilk etiketleme
+3. Etiketleme -> kontrol/düzeltme
+4. Veri Birleştir -> tüm class klasörlerini tek yapıya topla
+5. Dataset Splitter -> train/val/test'e böl
+6. Data Augment -> SADECE train'i çoğalt, çıktısını train'e ekle
+7. Model Eğitimi -> eğitimi başlat, best.pt'yi al
+8. Model Test -> yeni görsel/videoyla dene

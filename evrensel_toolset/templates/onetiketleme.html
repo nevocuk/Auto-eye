@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ön-Etiketleme</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <a href="/" class="hub-don-link">&larr; Toolset</a>
+
+  <section class="yukleme-ekrani">
+    <h1>Ön-Etiketleme</h1>
+    <p class="aciklama">
+      Bir klasördeki TÜM görsellerin aynı class'a ait olduğunu zaten biliyorsan
+      (örn. "bu klasördeki hepsi golden_retriever" ya da "hepsi fiat_egea"), elle
+      kutu çizmek yerine hazır bir modelin (varsayılan: yolo11n.pt, genel COCO
+      modeli, 80 gündelik nesne class'ını zaten tanır) nesneyi bulmasını sağlayıp
+      o kutuya otomatik senin class adını yazdırır. Sonra Etiketleme arayüzünden
+      açıp yanlış/eksik olanları düzeltirsin. Tek nesne net görünen fotoğraflarda
+      (katalog, video karesi) güvenlidir — kalabalık sahnelerde riskli, mutlaka
+      gözden geçir.
+    </p>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>Görsel Klasörü</strong> <span class="zorunlu">(zorunlu)</span>
+        <div class="secili-yol" id="gorsel_klasoru_goster">— seçilmedi —</div>
+      </div>
+      <button type="button" class="klasor-sec-btn" data-hedef="gorsel_klasoru">KLASÖR SEÇ</button>
+    </div>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>Etiket Klasörü</strong> <span class="opsiyonel">(opsiyonel)</span>
+        <div class="secili-yol" id="etiket_klasoru_goster">— seçilmedi (otomatik: 'labels') —</div>
+      </div>
+      <button type="button" class="klasor-sec-btn" data-hedef="etiket_klasoru">KLASÖR SEÇ</button>
+    </div>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>data.yaml</strong> <span class="opsiyonel">(opsiyonel)</span>
+        <div class="secili-yol" id="data_yaml_goster">— seçilmedi (otomatik aranacak) —</div>
+      </div>
+      <button type="button" class="dosya-sec-btn" data-hedef="data_yaml" data-tur="yaml">DOSYA SEÇ</button>
+    </div>
+
+    <div class="secim-satiri">
+      <div class="secim-etiket">
+        <strong>Model</strong> <span class="opsiyonel">(opsiyonel)</span>
+        <div class="secili-yol" id="model_dosyasi_goster">— seçilmedi (varsayılan: yolo11n.pt, genel COCO modeli) —</div>
+      </div>
+      <button type="button" class="dosya-sec-btn" data-hedef="model_dosyasi" data-tur="model">DOSYA SEÇ</button>
+    </div>
+
+    <button type="button" id="onizle-btn" class="klasor-degistir-btn-duz">ÖNİZLE</button>
+    <div id="onizleme-sonuc" class="onizleme-kutusu gizli"></div>
+
+    <label class="siniflar-label">Hedef class
+      <span class="opsiyonel">(bu klasördeki TÜM nesneler bu class olarak etiketlenecek — klasör seçilince liste otomatik dolar)</span>
+      <select id="hedef_class_secim">
+        <option value="">— önce klasör seç —</option>
+      </select>
+    </label>
+
+    <label class="siniflar-label gizli" id="yeni_class_satiri">Yeni class adı
+      <span class="opsiyonel">(var olan class'lara dokunulmaz, sadece sona eklenir -- onay isteyecek)</span>
+      <input type="text" id="yeni_class_adi" placeholder="örn. golden_retriever">
+    </label>
+
+    <label class="siniflar-label">Kaynak COCO sınıf(lar)ı
+      <span class="opsiyonel">
+        (opsiyonel — modelin (yolo11n.pt kullanıyorsan) hangi COCO class'ını arayacağını
+        belirtir, virgülle birden fazla yazılabilir; ör. "car,truck,bus" ya da "person" ya
+        da "dog,cat". Yazarken öneriler çıkar, tıklayınca eklenir. BOŞ bırakırsan modelin
+        bulduğu EN GÜVENİLİR kutu, class'ı ne olursa olsun kullanılır. Kendi custom
+        modelini veriyorsan (COCO değil) bu alanı genelde boş bırakman daha mantıklı.)
+      </span>
+      <div class="oneri-sarici">
+        <input type="text" id="kaynak_class" placeholder="örn. car,truck,bus (boş = en güvenilir kutu)" autocomplete="off">
+        <div id="kaynak_class_oneriler" class="oneri-kutusu gizli"></div>
+      </div>
+    </label>
+
+    <label class="siniflar-label">Confidence eşiği
+      <span class="opsiyonel">(modelin nesneyi kabul ettiği en düşük güven skoru, 0-1 arası)</span>
+      <input type="number" id="conf" value="0.35" min="0" max="1" step="0.05">
+    </label>
+
+    <div class="augment-mod-satiri">
+      <label><input type="checkbox" id="sadece_en_buyuk" checked> Sadece en büyük kutuyu al (kadrajda birden fazla nesne varsa, en büyüğü hedef class say)</label>
+    </div>
+    <div class="augment-mod-satiri">
+      <label><input type="checkbox" id="uzerine_yaz"> Zaten etiketli olanların da üzerine yaz</label>
+    </div>
+
+    <button type="button" id="calistir-btn" class="yukle-btn">ÇALIŞTIR</button>
+    <p id="onetiket-hata" class="hata"></p>
+
+    <div id="sonuc-kutu" class="onizleme-kutusu gizli"></div>
+  </section>
+
+  <script src="/static/onetiketleme.js"></script>
+</body>
+</html>

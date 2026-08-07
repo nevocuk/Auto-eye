@@ -1,0 +1,22 @@
+flask
+pyyaml
+pywebview
+Pillow
+numpy
+
+# Model Eğitimi / Model Test için (GPU kullanacaksan PyTorch'u CUDA'lı
+# sürümüyle ELLE kur, ultralytics'in otomatik kuracağı CPU'lu sürüm
+# GPU'nu kullanmaz):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#   pip install ultralytics
+ultralytics
+opencv-python
+imageio-ffmpeg
+
+# Fusion aracı için (plaka OCR: fast-plate-ocr -- plakaya özel eğitilmiş
+# model, sadece OCR yapar, tespiti bizim kendi modelimiz yapıyor + iPhone
+# HEIC/HEIF fotoğraflarını otomatik JPEG'e çevirme):
+#   NVIDIA GPU'n varsa: pip install fast-plate-ocr[onnx-gpu]
+#   Sadece CPU ile: pip install fast-plate-ocr[onnx]
+fast-plate-ocr[onnx]
+pillow-heif
