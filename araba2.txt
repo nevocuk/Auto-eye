@@ -1,0 +1,23 @@
+Hah, bu tarif ettiğin şey "vanilla" değil aslında — ilk mesajda kastettiğin basit "araba tanıma" değilmiş, bu çok daha kapsamlı bir sistem. Detaylandırayım:
+
+**Bu projenin gerçek zorluk kırılımı:**
+
+1. **Plaka tespiti + OCR (ANPR)** — bu kısım Türkiye'de nispeten "çözülmüş" bir problem, YOLO ile plaka bbox tespiti + bir OCR modeli (EasyOCR, PaddleOCR veya özel eğitilmiş CRNN) ile okuma. Hazır Türkçe plaka dataset'leri var, orta zorlukta.
+
+2. **Marka/model sınıflandırma (200 model)** — işte asıl zor kısım burası:
+   - 200 sınıflı **fine-grained classification** problemi (Fiat Egea ile Fiat Linea'yı ayırt etmek, iki sedan arasındaki farkı yakalamak — bu kuş/köpek ayırt etmekten çok daha zor, çünkü sınıflar arası fark çok ince)
+   - Her sınıf için yeterli veri toplamak ciddi efor: 200 model × farklı açı/renk/ışık koşulu = binlerce görsel gerekebilir, dengesiz veri sorunu kaçınılmaz olur (bazı modeller Türkiye'de çok az bulunur)
+   - Açık kaynak "Stanford Cars" gibi datasetler ABD/Avrupa modelli, Türkiye'deki filoyla (çok sayıda Fiat, Renault, Dacia, Togg vs.) örtüşmeyebilir — kendi veri toplaman/scrape etmen gerekebilir, bu ciddi zaman yer.
+
+3. **Matching/eşleştirme mantığı** — plaka + marka/model + renk bilgisini bir veritabanındaki (plaka, sahip, araç bilgisi) kayıtla eşleştirip "bu personelin mi değil mi" kararı vermek. Bu kısım aslında teknik olarak kolay (basit bir DB lookup + confidence skorlama), zor değil.
+
+4. **Giriş-çıkış çıkarımı** — aynı plakanın kamerada kaybolup tekrar görünme mantığıyla "içeride mi dışarıda mı" state tutmak. Orta zorlukta, tracking gerektirir.
+
+**Kıyas:**
+Bu proje, kapsam olarak kopya çekme projesinden **daha büyük ve daha çok parçalı** — üç ayrı model (plaka tespiti, OCR, 200-sınıf marka/model) + bir eşleştirme mantığı bir arada. Tek başına 200 sınıflı fine-grained bir sınıflandırıcıyı iyi bir doğrulukla eğitmek bile başlı başına bir tez konusu olabilecek zorlukta; veri toplama yükü kopya projesinden kat kat fazla.
+
+**Stajınla bağlantı açısından** ise plaka/marka-model tespiti senin şu an yaptığın "keypoint + bbox" işine kafa hareketi projesi kadar yakın değil — bu daha çok klasik object detection + fine-grained classification, farklı bir beceri seti (OCR pipeline'ı, sınıf dengesizliği yönetimi gibi).
+
+Kısacası: **daha zor, daha uzun soluklu, ama daha "iş dünyasına satılabilir" bir proje** (otopark güvenlik sistemi somut bir ürün fikri). Kopya çekme ise **daha hızlı prototiplenebilir, stajla daha örtüşen, akademik rapora daha kolay sığan** bir seçim.
+
+Zaman kısıtın var mı bu proje için (4 haftalık prototip planına mı ekleyeceksin, yoksa ayrı/uzun vadeli bir şey mi)?
