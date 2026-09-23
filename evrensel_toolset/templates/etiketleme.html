@@ -50,32 +50,33 @@
     <p id="yukleme-hata" class="hata"></p>
   </section>
 
+  <!-- Class seçim popup'ı (C tuşuyla açılır) -->
+  <div id="sinif-popup" class="sinif-popup gizli">
+    <div class="sinif-popup-ic">
+      <h3>Class Seç <span style="font-size:11px;color:#888">(rakam veya tıkla, Esc=kapat)</span></h3>
+      <ul id="sinif-listesi"></ul>
+    </div>
+  </div>
+
   <section id="ana-ekran" class="ana-ekran gizli">
     <aside class="sol-panel">
-      <h3>Class'lar</h3>
-      <ul id="sinif-listesi"></ul>
-      <p class="ipucu">Rakam tuşlarıyla (1,2,3...) aktif class'ı seç, sonra
-        görsel üzerinde fare ile sürükleyerek kutu çiz.<br><br>
-        <strong>Ctrl + fare tekerleği:</strong> yakınlaştır/uzaklaştır
-        (fare imlecine göre).<br>
-        <strong>Orta tuş sürükle:</strong> görselde gezin (pan).<br>
-        <strong>Sol tık (kutu üstü):</strong> kutuyu seç.<br>
-        <strong>Sağ tık (kutu üstü):</strong> kutuyu direkt sil.<br>
-        <strong>Yanlış etiketlenmiş kutu:</strong> alttaki "Bu görseldeki
-        kutular" listesinden dropdown ile doğru class'ı seç, ya da kutuyu
-        seçip (sol tık) bir rakam tuşuna bas.<br>
-        <strong>R:</strong> yakınlaştırmayı sıfırla (görseli pencereye sığdır).<br>
-        <strong>Delete/Backspace:</strong> seçili kutuyu sil.<br>
-        <strong>← →:</strong> önceki/sonraki görsel.<br>
-        <strong>Numpad 1 / . (nokta):</strong> bu görseli "sonra tekrar
-        kontrol et" diye işaretle/kaldır (listede kırmızı nokta olarak
-        görünür).<br>
-        <strong>Shift + Delete / L:</strong> bu görseli kalıcı sil (fare
-        gerekmez, açılan pencerede Enter = sil, Esc = vazgeç).</p>
+      <h3>Bu görseldeki kutular</h3>
+      <ul id="kutular-ul"></ul>
       <p class="ilerleme-kutusu" id="ilerleme">Etiketlenen: 0 / 0</p>
+      <p class="ipucu">
+        <strong>C:</strong> class seç popup<br>
+        <strong>1-9:</strong> hızlı class seç<br>
+        <strong>Ctrl+tekerlek:</strong> zoom<br>
+        <strong>Orta tuş:</strong> pan<br>
+        <strong>Sağ tık:</strong> kutuyu sil<br>
+        <strong>Del:</strong> seçili kutuyu sil<br>
+        <strong>← →:</strong> önceki/sonraki<br>
+        <strong>R:</strong> zoom sıfırla
+      </p>
     </aside>
 
     <main class="orta-panel">
+      <div id="yol-bilgisi" style="font-size:0.78em;color:#aaa;padding:2px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <div class="aktif-sinif-bar" id="aktif-sinif-bar">Aktif class: —</div>
       <div class="ust-bar">
         <button id="onceki-btn">&lt; Önceki</button>
@@ -88,10 +89,6 @@
       </div>
       <div class="canvas-sarici">
         <canvas id="canvas"></canvas>
-      </div>
-      <div class="kutu-listesi">
-        <h4>Bu görseldeki kutular</h4>
-        <ul id="kutular-ul"></ul>
       </div>
     </main>
 

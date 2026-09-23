@@ -46,12 +46,23 @@
           <button type="button" class="dosya-sec-btn" data-hedef="gorsel_dosyasi">DOSYA SEÇ</button>
         </div>
 
+        <div class="secim-satiri">
+          <div class="secim-etiket">
+            <strong>veya Görsel Klasörü</strong> <span class="opsiyonel">(opsiyonel — klasörden rastgele test)</span>
+            <div class="secili-yol" id="gorsel_klasoru_goster">— seçilmedi —</div>
+          </div>
+          <button type="button" class="klasor-sec-btn" id="gorsel-klasor-sec-btn">KLASÖR SEÇ</button>
+        </div>
+
         <label class="siniflar-label">Confidence eşiği
           <span class="opsiyonel">(bunun altındaki tahminler gösterilmez, 0-1 arası)</span>
           <input type="number" id="conf" value="0.25" min="0" max="1" step="0.05">
         </label>
 
-        <button type="button" id="test-btn" class="yukle-btn">TEST ET</button>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <button type="button" id="test-btn" class="yukle-btn">TEST ET</button>
+          <button type="button" id="rastgele-test-btn" class="klasor-degistir-btn-duz gizli">Rastgele Görsel Getir</button>
+        </div>
         <p id="test-hata" class="hata"></p>
 
         <div id="tespit-listesi-kutu" class="onizleme-kutusu gizli"></div>

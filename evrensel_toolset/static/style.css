@@ -542,13 +542,31 @@ body {
 }
 #canvas {
   max-width: 100%;
-  max-height: 70vh;
+  max-height: 85vh;
   background: #000;
   cursor: crosshair;
 }
 
-.kutu-listesi { width: 100%; margin-top: 10px; }
-.kutu-listesi h4 { font-size: 12px; color: #999; margin: 6px 0; }
+/* Class seçim popup'ı */
+.sinif-popup {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.sinif-popup.gizli { display: none; }
+.sinif-popup-ic {
+  background: #2a2a2a; border: 1px solid #555; border-radius: 8px;
+  padding: 16px; min-width: 260px; max-width: 400px; max-height: 70vh; overflow-y: auto;
+}
+.sinif-popup-ic h3 { font-size: 14px; color: #ccc; margin: 0 0 10px 0; }
+.sinif-popup-ic ul { list-style: none; padding: 0; margin: 0; }
+.sinif-popup-ic li {
+  padding: 7px 10px; margin-bottom: 3px; border-radius: 4px;
+  font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+}
+.sinif-popup-ic li:hover { background: #3b82f6; }
+.sinif-popup-ic li.aktif { background: #3b82f6; }
 #kutular-ul li {
   font-size: 12px;
   padding: 4px 8px;
@@ -570,4 +588,29 @@ body {
   border-radius: 4px;
   font-size: 12px;
   margin-right: 8px;
+}
+
+/* Splitter iki kolon layout */
+.splitter-iki-kolon {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 100vh;
+}
+.splitter-sol {
+  border-right: 1px solid #333;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+.splitter-sag {
+  background: #242424;
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 100vh;
+}
+.splitter-sag h3 { font-size: 14px; color: #999; margin-bottom: 10px; }
+.splitter-sag .analiz-kutusu {
+  white-space: pre-wrap;
+  font-size: 12px;
+  line-height: 1.5;
 }

@@ -9,67 +9,73 @@
 
   <a href="/" class="hub-don-link">&larr; Toolset</a>
 
-  <section class="yukleme-ekrani">
-    <h1>Dataset Splitter</h1>
-    <p class="aciklama">
-      Etiketlenmiş bir images/+labels/ klasörünü train/val/test'e böler.
-      Sadece etiketli (dolu .txt'si olan) görseller bölünür, etiketsizler
-      atlanır. Bölme sonrası çıktı klasöründe yeni bir data.yaml ve
-      analiz.txt raporu oluşturulur.
-    </p>
+  <div class="splitter-iki-kolon">
+    <section class="yukleme-ekrani splitter-sol">
+      <h1>Dataset Splitter</h1>
+      <p class="aciklama">
+        Etiketlenmiş bir images/+labels/ klasörünü train/val/test'e böler.
+        Sadece etiketli (dolu .txt'si olan) görseller bölünür, etiketsizler
+        atlanır. Bölme sonrası çıktı klasöründe yeni bir data.yaml ve
+        analiz.txt raporu oluşturulur.
+      </p>
 
-    <div class="secim-satiri">
-      <div class="secim-etiket">
-        <strong>Görsel Klasörü</strong> <span class="zorunlu">(zorunlu)</span>
-        <div class="secili-yol" id="gorsel_klasoru_goster">— seçilmedi —</div>
+      <div class="secim-satiri">
+        <div class="secim-etiket">
+          <strong>Görsel Klasörü</strong> <span class="zorunlu">(zorunlu)</span>
+          <div class="secili-yol" id="gorsel_klasoru_goster">— seçilmedi —</div>
+        </div>
+        <button type="button" class="klasor-sec-btn" data-hedef="gorsel_klasoru">KLASÖR SEÇ</button>
       </div>
-      <button type="button" class="klasor-sec-btn" data-hedef="gorsel_klasoru">KLASÖR SEÇ</button>
-    </div>
 
-    <div class="secim-satiri">
-      <div class="secim-etiket">
-        <strong>Etiket Klasörü</strong> <span class="opsiyonel">(opsiyonel)</span>
-        <div class="secili-yol" id="etiket_klasoru_goster">— seçilmedi (otomatik: 'labels') —</div>
+      <div class="secim-satiri">
+        <div class="secim-etiket">
+          <strong>Etiket Klasörü</strong> <span class="opsiyonel">(opsiyonel)</span>
+          <div class="secili-yol" id="etiket_klasoru_goster">— seçilmedi (otomatik: 'labels') —</div>
+        </div>
+        <button type="button" class="klasor-sec-btn" data-hedef="etiket_klasoru">KLASÖR SEÇ</button>
       </div>
-      <button type="button" class="klasor-sec-btn" data-hedef="etiket_klasoru">KLASÖR SEÇ</button>
-    </div>
 
-    <div class="secim-satiri">
-      <div class="secim-etiket">
-        <strong>data.yaml</strong> <span class="opsiyonel">(opsiyonel)</span>
-        <div class="secili-yol" id="data_yaml_goster">— seçilmedi (otomatik aranacak) —</div>
+      <div class="secim-satiri">
+        <div class="secim-etiket">
+          <strong>data.yaml</strong> <span class="opsiyonel">(opsiyonel)</span>
+          <div class="secili-yol" id="data_yaml_goster">— seçilmedi (otomatik aranacak) —</div>
+        </div>
+        <button type="button" class="dosya-sec-btn" data-hedef="data_yaml">DOSYA SEÇ</button>
       </div>
-      <button type="button" class="dosya-sec-btn" data-hedef="data_yaml">DOSYA SEÇ</button>
-    </div>
 
-    <label class="siniflar-label">Çıktı klasörü adı
-      <span class="opsiyonel">(görsel klasörünün yanında otomatik oluşturulur, seçim gerekmez)</span>
-      <input type="text" id="cikti_adi" value="split">
-    </label>
-    <div class="secili-yol" id="cikti_klasoru_goster">— önce görsel klasörü seç —</div>
+      <label class="siniflar-label">Çıktı klasörü adı
+        <span class="opsiyonel">(görsel klasörünün yanında otomatik oluşturulur)</span>
+        <input type="text" id="cikti_adi" value="split">
+      </label>
+      <div class="secili-yol" id="cikti_klasoru_goster">— önce görsel klasörü seç —</div>
 
-    <button type="button" id="onizle-btn" class="klasor-degistir-btn-duz">ÖNİZLE</button>
-    <div id="onizleme-sonuc" class="onizleme-kutusu gizli"></div>
+      <button type="button" id="onizle-btn" class="klasor-degistir-btn-duz">ÖNİZLE</button>
+      <div id="onizleme-sonuc" class="onizleme-kutusu gizli"></div>
 
-    <label class="siniflar-label">Train oranı (%)
-      <input type="number" id="train_oran" value="70" min="0" max="100">
-    </label>
-    <label class="siniflar-label">Val oranı (%)
-      <input type="number" id="val_oran" value="15" min="0" max="100">
-    </label>
-    <label class="siniflar-label">Test oranı (%)
-      <input type="number" id="test_oran" value="15" min="0" max="100">
-    </label>
+      <label class="siniflar-label">Train oranı (%)
+        <input type="number" id="train_oran" value="70" min="0" max="100">
+      </label>
+      <label class="siniflar-label">Val oranı (%)
+        <input type="number" id="val_oran" value="15" min="0" max="100">
+      </label>
+      <label class="siniflar-label">Test oranı (%)
+        <input type="number" id="test_oran" value="15" min="0" max="100">
+      </label>
 
-    <label class="siniflar-label">Sabit seed (sayı) <span class="opsiyonel">(opsiyonel -- boş bırakırsan her BÖL'de train/val/test'e farklı görseller düşebilir; bir sayı girersen aynı seed'le tekrar çalıştırdığında AYNI bölünme üretilir -- örn. bir modeli aynı böleyle tekrar eğitip karşılaştırmak istersen işine yarar)</span>
-      <input type="number" id="seed" placeholder="örn. 42" step="1">
-    </label>
+      <label class="siniflar-label">Sabit seed (sayı) <span class="opsiyonel">(opsiyonel)</span>
+        <input type="number" id="seed" placeholder="örn. 42" step="1">
+      </label>
 
-    <button type="button" id="bol-btn" class="yukle-btn">BÖL</button>
-    <p id="splitter-hata" class="hata"></p>
+      <button type="button" id="bol-btn" class="yukle-btn">BÖL</button>
+      <p id="splitter-hata" class="hata"></p>
+    </section>
 
-    <pre id="analiz-sonuc" class="analiz-kutusu gizli"></pre>
-  </section>
+    <aside class="splitter-sag">
+      <h3>Analiz Sonucu</h3>
+      <pre id="analiz-sonuc" class="analiz-kutusu gizli"></pre>
+      <p id="analiz-bos" style="color:#888;font-size:13px;">Henüz bölme yapılmadı.</p>
+    </aside>
+  </div>
 
   <script src="/static/splitter.js"></script>
 </body>

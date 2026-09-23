@@ -130,4 +130,6 @@ document.getElementById("bol-btn").addEventListener("click", async () => {
 
   analizEl.classList.remove("gizli");
   analizEl.textContent = veri.analiz;
+  const bosEl = document.getElementById("analiz-bos");
+  if (bosEl) bosEl.style.display = "none";
 });
