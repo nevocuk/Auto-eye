@@ -41,6 +41,51 @@ document.querySelectorAll(".dosya-sec-btn").forEach((btn) => {
   });
 });
 
+// --- Görsel klasörü seçme (folder mode) ---
+document.getElementById("gorsel-klasor-sec-btn").addEventListener("click", async () => {
+  if (!window.pywebview || !window.pywebview.api) {
+    alert("Native pencere API'si henüz hazır değil, bir saniye sonra tekrar dene.");
+    return;
+  }
+  const yol = await window.pywebview.api.klasor_sec();
+  if (!yol) return;
+  document.getElementById("gorsel_klasoru_goster").textContent = yol;
+
+  const cevap = await fetch("/api/test/klasor_yukle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ klasor: yol }),
+  });
+  const veri = await cevap.json();
+
+  if (veri.hata) {
+    document.getElementById("test-hata").textContent = veri.hata;
+    return;
+  }
+
+  document.getElementById("gorsel_klasoru_goster").textContent = `${yol} (${veri.toplam} görsel)`;
+  document.getElementById("rastgele-test-btn").classList.remove("gizli");
+
+  const rastgeleCevap = await fetch("/api/test/rastgele_gorsel", { method: "POST" });
+  const rastgele = await rastgeleCevap.json();
+  if (rastgele.ok) {
+    secilenYollar.gorsel_dosyasi = rastgele.gorsel_yolu;
+    document.getElementById("gorsel_dosyasi_goster").textContent = rastgele.gorsel_yolu;
+  }
+});
+
+document.getElementById("rastgele-test-btn").addEventListener("click", async () => {
+  const cevap = await fetch("/api/test/rastgele_gorsel", { method: "POST" });
+  const veri = await cevap.json();
+  if (veri.hata) {
+    document.getElementById("test-hata").textContent = veri.hata;
+    return;
+  }
+  secilenYollar.gorsel_dosyasi = veri.gorsel_yolu;
+  document.getElementById("gorsel_dosyasi_goster").textContent = veri.gorsel_yolu;
+  document.getElementById("test-btn").click();
+});
+
 // ================= GÖRSEL MODU =================
 document.getElementById("test-btn").addEventListener("click", async () => {
   const hataEl = document.getElementById("test-hata");

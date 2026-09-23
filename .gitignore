@@ -16,6 +16,10 @@ kod/*_ciktilari/
 # Veritabanı ve tek-çalıştırma kayıtları (kişisel/yerel veri, paylaşılmaz)
 db/*.db
 kayitlar/*.json
+etiketleme_arayuzu/db/*.db
+etiketleme_arayuzu/kayitlar/*.json
+evrensel_toolset/db/*.db
+evrensel_toolset/kayitlar/*.json
 
 # Büyük, yeniden üretilebilir eğitim çıktıları (100MB GitHub sınırına
 # takılabilecek dosyalar burada olabilir; sadece en son/final ağırlığı
@@ -36,7 +40,18 @@ veri/augments/
 veri/arabalar4tur/
 test edilecekler/
 
+# Test verileri (augment, split çıktıları vb.)
+veri/augment/
+veri/augmenttesteg/
+veri/splitteest/
+
+# Geliştirme notları (kişisel)
+gelistirmeler.txt
+
 # Editör/OS
 .vscode/
+.idea/
 .DS_Store
 Thumbs.db
+*.swp
+*~

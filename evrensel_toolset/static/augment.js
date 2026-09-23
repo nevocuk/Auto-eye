@@ -232,6 +232,8 @@ async function filtreListesiniDoldur() {
   if (veri.siniflar.includes(oncekiSecim)) secim.value = oncekiSecim;
 }
 
+let augmentPollingId = null;
+
 document.getElementById("calistir-btn").addEventListener("click", async () => {
   const hataEl = document.getElementById("augment-hata");
   const analizEl = document.getElementById("analiz-sonuc");
@@ -268,8 +270,72 @@ document.getElementById("calistir-btn").addEventListener("click", async () => {
     return;
   }
 
-  analizEl.classList.remove("gizli");
-  analizEl.textContent = veri.analiz;
+  document.getElementById("calistir-btn").disabled = true;
+  document.getElementById("durdur-btn").classList.remove("gizli");
+
+  if (augmentPollingId) clearInterval(augmentPollingId);
+  augmentPollingId = setInterval(augmentDurumGuncelle, 1000);
+  augmentDurumGuncelle();
+});
+
+async function augmentDurumGuncelle() {
+  const cevap = await fetch("/api/augment/durum");
+  const d = await cevap.json();
+  const analizEl = document.getElementById("analiz-sonuc");
+  const hataEl = document.getElementById("augment-hata");
+
+  if (d.calisiyor) {
+    const durum = d.durduruldu ? " (DURAKLATILDI)" : "";
+    analizEl.classList.remove("gizli");
+    analizEl.textContent = `İşleniyor${durum}: ${d.islenen} / ${d.toplam} görsel, ${d.uretilen} üretildi`;
+  } else {
+    clearInterval(augmentPollingId);
+    augmentPollingId = null;
+    document.getElementById("calistir-btn").disabled = false;
+    document.getElementById("durdur-btn").classList.add("gizli");
+    document.getElementById("devam-btn").classList.add("gizli");
+
+    if (d.hata) {
+      hataEl.textContent = d.hata;
+    } else if (d.tamamlandi && d.analiz) {
+      analizEl.classList.remove("gizli");
+      analizEl.textContent = d.analiz;
+    }
+  }
+}
+
+document.getElementById("durdur-btn").addEventListener("click", async () => {
+  await fetch("/api/augment/durdur", { method: "POST" });
+  document.getElementById("durdur-btn").classList.add("gizli");
+  document.getElementById("devam-btn").classList.remove("gizli");
+});
+
+document.getElementById("devam-btn").addEventListener("click", async () => {
+  await fetch("/api/augment/devam", { method: "POST" });
+  document.getElementById("devam-btn").classList.add("gizli");
+  document.getElementById("durdur-btn").classList.remove("gizli");
+});
+
+document.getElementById("rastgele-gorsel-btn").addEventListener("click", async () => {
+  if (!secilenYollar.gorsel_klasoru) return;
+  const filtre = document.getElementById("filtre").value;
+  const teknikler = teknikAyarlariniTopla();
+  const yukleniyorEl = document.getElementById("onizleme-yukleniyor");
+  yukleniyorEl.classList.remove("gizli");
+
+  const gorselCevap = await fetch("/api/augment/onizleme_gorsel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...secilenYollar, filtre, teknikler, rastgele: true }),
+  }).then((r) => r.json());
+
+  yukleniyorEl.classList.add("gizli");
+  if (gorselCevap.hata) return;
+
+  const t = Date.now();
+  document.getElementById("onizleme-gorsel-orijinal").src = gorselCevap.orijinal_url + "?t=" + t;
+  document.getElementById("onizleme-gorsel-filtreli").src = gorselCevap.filtreli_url + "?t=" + t;
+  document.getElementById("onizleme-gorsel-satiri").classList.remove("gizli");
 });
 
 // "Tümünü Sıfırla" -- kullanıcı deneme yanılma yaparken (örn. blur'u

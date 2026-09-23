@@ -90,8 +90,12 @@ document.getElementById("calistir-btn").addEventListener("click", async () => {
   });
 
   sonucEl.classList.remove("gizli");
-  sonucEl.textContent =
-    satirlar.join("\n") +
+  let ozet = satirlar.join("\n") +
     `\n\n[ÖZET] Yeni kopyalanan: ${veri.toplam_kopyalanan}  Zaten mevcuttu: ${veri.toplam_zaten_var}  Etiketsiz (atlandı): ${veri.toplam_etiketsiz}\n` +
     `Çıktı: ${veri.cikti_klasoru}`;
+  if (veri.birlesik_siniflar && veri.birlesik_siniflar.length > 0) {
+    ozet += `\n\n[data.yaml] ${veri.birlesik_siniflar.length} class birleştirildi → ${veri.cikti_klasoru}\\data.yaml`;
+    ozet += `\nClass'lar: ${veri.birlesik_siniflar.join(", ")}`;
+  }
+  sonucEl.textContent = ozet;
 });

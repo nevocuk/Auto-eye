@@ -9,6 +9,8 @@
 // belirliyor. Fare tıklamalarını da aynı şekilde tersine çeviriyoruz
 // (canvas pikseli -> görsel pikseli).
 
+function _e(s) { if (s == null) return ""; const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
+
 const RENKLER = [
   "#ef4444", "#3b82f6", "#22c55e", "#eab308", "#a855f7",
   "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16",
@@ -123,19 +125,20 @@ async function projeyiYukle(onay) {
 
   siniflar = veri.siniflar;
   gorseller = veri.gorseller;
+  kutular = [];
   mevcutIndex = 0;
 
-  // ÖNEMLİ: her yeni klasör/proje yüklendiğinde aktif sınıfı SIFIRLIYORUZ
-  // (bir önceki klasörden kalan seçim sessizce devam etmesin diye — bu
-  // tam olarak "clio4 klasöründen clio3'e geçtim ama hâlâ eskisiyle
-  // etiketliyor" hatasının sebebiydi). Klasör adı sınıflardan biriyle
-  // eşleşiyorsa (örn. klasör "fiat_egea" ise) otomatik onu seçiyoruz,
-  // eşleşme yoksa ilk sınıfa (index 0) dönüyoruz — ama HER ZAMAN net bir
-  // varsayılana sıfırlıyoruz, asla eskisini sessizce taşımıyoruz.
   aktifSinif = sinifiOtomatikSecmeyeCalis(govde.gorsel_klasoru) ?? 0;
 
   document.getElementById("yukleme-ekrani").classList.add("gizli");
   document.getElementById("ana-ekran").classList.remove("gizli");
+
+  // Yol bilgisini göster
+  const yolBilgi = document.getElementById("yol-bilgisi");
+  if (yolBilgi && (veri.etiket_klasoru || veri.data_yaml_yolu)) {
+    yolBilgi.textContent =
+      `Etiketler: ${veri.etiket_klasoru || "—"}  |  data.yaml: ${veri.data_yaml_yolu || "—"}`;
+  }
 
   sinifListesiCiz();
   gorselListesiCiz();
@@ -161,7 +164,7 @@ function sinifiOtomatikSecmeyeCalis(gorselKlasoruYolu) {
   return null;
 }
 
-// --- Sınıf listesi (sol panel) + üst bardaki büyük "aktif sınıf" göstergesi ---
+// --- Sınıf listesi (popup) + üst bardaki "aktif sınıf" göstergesi ---
 function sinifListesiCiz() {
   const ul = document.getElementById("sinif-listesi");
   ul.innerHTML = "";
@@ -169,16 +172,32 @@ function sinifListesiCiz() {
     const li = document.createElement("li");
     li.className = i === aktifSinif ? "aktif" : "";
     li.innerHTML = `<span class="renk-kutucuk" style="background:${RENKLER[i % RENKLER.length]}"></span>
-                     ${i + 1}. ${isim}`;
-    li.addEventListener("click", () => { aktifSinif = i; sinifListesiCiz(); });
+                     ${i + 1}. ${_e(isim)}`;
+    li.addEventListener("click", () => {
+      aktifSinif = i;
+      sinifListesiCiz();
+      sinifPopupKapat();
+    });
     ul.appendChild(li);
   });
 
   const bar = document.getElementById("aktif-sinif-bar");
   const aktifIsim = siniflar[aktifSinif] || "—";
-  bar.textContent = `Aktif class: ${aktifIsim}  (rakamla değiştir: 1-${siniflar.length})`;
+  bar.textContent = `Aktif class: ${aktifIsim}  (C tuşu = class seç)`;
   bar.style.background = RENKLER[aktifSinif % RENKLER.length];
 }
+
+function sinifPopupAc() {
+  sinifListesiCiz();
+  document.getElementById("sinif-popup").classList.remove("gizli");
+}
+function sinifPopupKapat() {
+  document.getElementById("sinif-popup").classList.add("gizli");
+}
+document.getElementById("sinif-popup").addEventListener("click", (e) => {
+  if (e.target.id === "sinif-popup") sinifPopupKapat();
+});
+document.getElementById("aktif-sinif-bar").addEventListener("click", sinifPopupAc);
 
 // --- Görsel listesi (sağ panel) + genel ilerleme sayacı ---
 function gorselListesiCiz() {
@@ -187,7 +206,7 @@ function gorselListesiCiz() {
   gorseller.forEach((g, i) => {
     const li = document.createElement("li");
     li.className = i === mevcutIndex ? "mevcut" : "";
-    li.innerHTML = `<span>${g.ad}</span>
+    li.innerHTML = `<span>${_e(g.ad)}</span>
       <span class="gorsel-sag">
         <span class="bayrak-nokta ${g.bayrakli ? "aktif" : ""}"></span>
         <span class="isaret ${g.etiketli ? "" : "bos"}">${g.etiketli ? "OK" : "-"}</span>
@@ -285,9 +304,15 @@ document.getElementById("kaydet-btn").addEventListener("click", () => kaydet(tru
 // klasörüne geçmeyi sağlar (örn. sınıf başına ayrı klasörler arasında
 // gidip gelirken kullanışlı).
 document.getElementById("klasor-degistir-btn").addEventListener("click", async () => {
-  await kaydet(); // mevcut görseldeki değişiklikleri kaybetmeden kaydet
+  await kaydet();
 
-  // Yükleme ekranını sıfırla (önceki seçimler kalmasın, karışıklık olmasın)
+  // Backend state'i sıfırla (eski data.yaml kalmasın)
+  await fetch("/api/sifirla", { method: "POST" });
+
+  // Frontend state'i sıfırla
+  siniflar = [];
+  gorseller = [];
+  kutular = [];
   secilenYollar.gorsel_klasoru = "";
   secilenYollar.etiket_klasoru = "";
   secilenYollar.data_yaml = "";
@@ -296,6 +321,8 @@ document.getElementById("klasor-degistir-btn").addEventListener("click", async (
   document.getElementById("data_yaml_goster").textContent = "— seçilmedi (otomatik aranacak) —";
   document.getElementById("siniflar").value = "";
   document.getElementById("yukleme-hata").textContent = "";
+  const yolBilgi = document.getElementById("yol-bilgisi");
+  if (yolBilgi) yolBilgi.textContent = "";
 
   document.getElementById("ana-ekran").classList.add("gizli");
   document.getElementById("yukleme-ekrani").classList.remove("gizli");
@@ -502,10 +529,11 @@ canvas.addEventListener("mouseup", (e) => {
   cizimBasladi = false;
 
   const bitisGorsel = canvasNoktasindanGorsele(fareCanvasKonumu(e));
-  const x1 = Math.min(cizimBaslangicGorsel.x, bitisGorsel.x);
-  const y1 = Math.min(cizimBaslangicGorsel.y, bitisGorsel.y);
-  const x2 = Math.max(cizimBaslangicGorsel.x, bitisGorsel.x);
-  const y2 = Math.max(cizimBaslangicGorsel.y, bitisGorsel.y);
+  const w = mevcutGorsel.naturalWidth, h = mevcutGorsel.naturalHeight;
+  const x1 = Math.max(0, Math.min(cizimBaslangicGorsel.x, bitisGorsel.x));
+  const y1 = Math.max(0, Math.min(cizimBaslangicGorsel.y, bitisGorsel.y));
+  const x2 = Math.min(w, Math.max(cizimBaslangicGorsel.x, bitisGorsel.x));
+  const y2 = Math.min(h, Math.max(cizimBaslangicGorsel.y, bitisGorsel.y));
 
   onizlemeGorsel = null;
 
@@ -606,7 +634,16 @@ document.addEventListener("keydown", (e) => {
       kutuListesiCiz();
     }
   } else if (e.key === "r" || e.key === "R") {
-    yakinlastirmayiSifirla(); // zoom reset / görseli pencereye sığdır
+    yakinlastirmayiSifirla();
+  } else if (e.key === "c" || e.key === "C") {
+    const popup = document.getElementById("sinif-popup");
+    if (popup.classList.contains("gizli")) {
+      sinifPopupAc();
+    } else {
+      sinifPopupKapat();
+    }
+  } else if (e.key === "Escape") {
+    sinifPopupKapat();
   }
 });
 

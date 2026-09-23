@@ -438,6 +438,15 @@ def test_sayfasi():
     return render_template("test.html")
 
 
+@app.route("/api/sifirla", methods=["POST"])
+def sifirla():
+    DURUM.update({
+        "gorsel_klasoru": None, "etiket_klasoru": None,
+        "data_yaml_yolu": None, "siniflar": [], "gorseller": [], "bayraklar": {},
+    })
+    return jsonify({"ok": True})
+
+
 @app.route("/api/yukle", methods=["POST"])
 def yukle():
     veri = request.get_json()
@@ -469,6 +478,8 @@ def yukle():
         etiket_klasoru = Path(etiket_klasoru_str)
     elif gorsel_klasoru.name == "images":
         etiket_klasoru = gorsel_klasoru.parent / "labels"
+    elif gorsel_klasoru.parent.name.lower() == "images":
+        etiket_klasoru = gorsel_klasoru.parent.parent / "labels" / gorsel_klasoru.name
     else:
         etiket_klasoru = gorsel_klasoru.parent / "labels" / gorsel_klasoru.name
     etiket_klasoru.mkdir(parents=True, exist_ok=True)
@@ -502,7 +513,17 @@ def yukle():
     # sınıf asla kaydedilmez — sadece "onay_gerekli" bilgisini döndürüp
     # var olan sınıflarla devam ederiz, kullanıcı isterse tekrar
     # `onay: true` ile gönderip ekletir.
-    data_yaml_yolu = Path(data_yaml_str) if data_yaml_str else (gorsel_klasoru.parent / "data.yaml")
+    if data_yaml_str:
+        data_yaml_yolu = Path(data_yaml_str)
+    else:
+        data_yaml_yolu = gorsel_klasoru.parent / "data.yaml"
+        aday = gorsel_klasoru
+        for _ in range(3):
+            aday = aday.parent
+            deneme = aday / "data.yaml"
+            if deneme.exists():
+                data_yaml_yolu = deneme
+                break
     mevcut_siniflar = data_yaml_oku(data_yaml_yolu) if data_yaml_yolu.exists() else []
 
     if siniflar_str:
@@ -661,10 +682,13 @@ def etiket_kaydet(dosya_adi):
             f"{int(k['sinif'])} {k['x']:.6f} {k['y']:.6f} {k['w']:.6f} {k['h']:.6f}"
         )
 
-    with open(etiket_dosyasi, "w", encoding="utf-8") as f:
-        f.write("\n".join(satirlar))
-        if satirlar:
+    if satirlar:
+        with open(etiket_dosyasi, "w", encoding="utf-8") as f:
+            f.write("\n".join(satirlar))
             f.write("\n")
+    else:
+        if etiket_dosyasi.exists():
+            etiket_dosyasi.unlink()
 
     return jsonify({"ok": True, "kutu_sayisi": len(satirlar)})
 
@@ -1212,6 +1236,19 @@ def _golge_ekle(img: Image.Image, opaklik: float) -> Image.Image:
 AUGMENT_ONIZLEME_KLASORU = Path(__file__).resolve().parent / "static" / "augment_onizleme"
 AUGMENT_ONIZLEME_MAKS_KENAR = 900  # önizleme hızlı olsun diye görsel bu boyuta küçültülüyor
 
+AUGMENT_ISLEM = {
+    "calisiyor": False,
+    "durduruldu": False,
+    "islenen": 0,
+    "toplam": 0,
+    "uretilen": 0,
+    "hata": None,
+    "tamamlandi": False,
+    "analiz": None,
+    "iptal": False,
+}
+AUGMENT_ISLEM_KILIDI = threading.Lock()
+
 
 @app.route("/api/augment/onizleme_gorsel", methods=["POST"])
 def augment_onizleme_gorsel():
@@ -1240,7 +1277,11 @@ def augment_onizleme_gorsel():
     if not ciftler:
         return jsonify({"hata": "Filtreye uyan hiç görsel bulunamadı -- önizlenecek örnek yok."}), 400
 
-    ornek_gorsel_yolu, _etiket_yolu = ciftler[0]
+    rastgele = veri.get("rastgele", False)
+    if rastgele:
+        ornek_gorsel_yolu, _etiket_yolu = random.choice(ciftler)
+    else:
+        ornek_gorsel_yolu, _etiket_yolu = ciftler[0]
 
     aktif_teknikler = {k: v for k, v in teknik_ayarlari.items() if v.get("aktif")}
     teknik_degerleri = {}
@@ -1297,8 +1338,97 @@ def augment_on_izle():
     })
 
 
+def _augment_arka_plan(gorsel_klasoru, etiket_klasoru, data_yaml_yolu,
+                       cikti_klasoru, filtre, mod, adet, aktif_teknikler,
+                       teknik_etiketi, siniflar, ciftler):
+    sinif_sonra = defaultdict(int)
+    uretilen_toplam = 0
+    cikti_gorsel = cikti_klasoru / "images"
+    cikti_etiket = cikti_klasoru / "labels"
+    cikti_gorsel.mkdir(parents=True, exist_ok=True)
+    cikti_etiket.mkdir(parents=True, exist_ok=True)
+
+    try:
+        for idx, (gorsel_yolu, etiket_yolu) in enumerate(ciftler):
+            while True:
+                with AUGMENT_ISLEM_KILIDI:
+                    if AUGMENT_ISLEM["iptal"]:
+                        AUGMENT_ISLEM["calisiyor"] = False
+                        return
+                    if not AUGMENT_ISLEM["durduruldu"]:
+                        break
+                import time as _t
+                _t.sleep(0.2)
+
+            with AUGMENT_ISLEM_KILIDI:
+                AUGMENT_ISLEM["islenen"] = idx + 1
+
+            with Image.open(gorsel_yolu) as im:
+                for tekrar in range(adet):
+                    teknik_degerleri = {}
+                    for ad, ayar in aktif_teknikler.items():
+                        taban = float(ayar.get("taban", 1.0))
+                        hedef = float(ayar.get("hedef", taban))
+                        teknik_degerleri[ad] = taban if mod == "sabit" else _rastgele_arada(taban, hedef)
+
+                    yeni_img = _augment_uygula(im, teknik_degerleri)
+
+                    ek = f"_aug{teknik_etiketi}{tekrar + 1}" if adet > 1 else f"_aug{teknik_etiketi}"
+                    yeni_ad = f"{gorsel_yolu.stem}{ek}{gorsel_yolu.suffix}"
+                    yeni_etiket_ad = f"{gorsel_yolu.stem}{ek}.txt"
+
+                    yeni_img.save(cikti_gorsel / yeni_ad)
+                    if etiket_yolu is not None:
+                        shutil.copy2(etiket_yolu, cikti_etiket / yeni_etiket_ad)
+                    else:
+                        (cikti_etiket / yeni_etiket_ad).write_text("", encoding="utf-8")
+
+                    uretilen_toplam += 1
+                    for i in _etiketteki_sinif_idleri(etiket_yolu):
+                        if 0 <= i < len(siniflar):
+                            sinif_sonra[siniflar[i]] += 1
+
+            with AUGMENT_ISLEM_KILIDI:
+                AUGMENT_ISLEM["uretilen"] = uretilen_toplam
+
+        yeni_data_yaml = cikti_klasoru / "data.yaml"
+        icerik = {
+            "train": "images", "val": "images", "test": "images",
+            "names": {i: isim for i, isim in enumerate(siniflar)},
+        }
+        with open(yeni_data_yaml, "w", encoding="utf-8") as f:
+            yaml.safe_dump(icerik, f, allow_unicode=True, sort_keys=False)
+
+        analiz_satirlari = [
+            "=" * 80, "DATA AUGMENT RAPORU", "=" * 80, "",
+            f"Mod: {mod}",
+            f"Filtre: {filtre or '(yok, tüm etiketli görseller)'}",
+            f"İşlenen kaynak görsel: {len(ciftler)}",
+            f"Üretilen yeni görsel: {uretilen_toplam}", "",
+            "Class bazında yeni üretilen etiket sayısı:", "-" * 40,
+        ]
+        for isim in siniflar:
+            analiz_satirlari.append(f"  {isim:<24}{sinif_sonra.get(isim, 0):>8}")
+        analiz_metni = "\n".join(analiz_satirlari) + "\n"
+        (cikti_klasoru / "analiz.txt").write_text(analiz_metni, encoding="utf-8")
+
+        with AUGMENT_ISLEM_KILIDI:
+            AUGMENT_ISLEM["tamamlandi"] = True
+            AUGMENT_ISLEM["analiz"] = analiz_metni
+    except Exception as e:
+        with AUGMENT_ISLEM_KILIDI:
+            AUGMENT_ISLEM["hata"] = str(e)
+    finally:
+        with AUGMENT_ISLEM_KILIDI:
+            AUGMENT_ISLEM["calisiyor"] = False
+
+
 @app.route("/api/augment/calistir", methods=["POST"])
 def augment_calistir():
+    with AUGMENT_ISLEM_KILIDI:
+        if AUGMENT_ISLEM["calisiyor"]:
+            return jsonify({"hata": "Zaten devam eden bir augment işlemi var."}), 400
+
     veri = request.get_json()
     gorsel_klasoru, etiket_klasoru, data_yaml_yolu = _augment_klasorleri_coz(
         veri.get("gorsel_klasoru", "").strip(),
@@ -1306,9 +1436,8 @@ def augment_calistir():
         veri.get("data_yaml", "").strip(),
     )
     filtre = veri.get("filtre", "").strip()
-    mod = veri.get("mod", "sabit")  # "sabit" | "dinamik"
+    mod = veri.get("mod", "sabit")
     teknik_ayarlari = veri.get("teknikler", {})
-    # teknik_ayarlari: {"parlaklik": {"aktif": bool, "taban": float, "hedef": float}, ...}
 
     cikti_klasoru_str = veri.get("cikti_klasoru", "").strip()
     if not cikti_klasoru_str:
@@ -1325,18 +1454,12 @@ def augment_calistir():
     except (TypeError, ValueError):
         adet = 1
     if mod == "sabit":
-        adet = 1  # sabit modda her görselden tek bir çoğaltma üretilir
+        adet = 1
 
     aktif_teknikler = {k: v for k, v in teknik_ayarlari.items() if v.get("aktif")}
     if not aktif_teknikler:
         return jsonify({"hata": "En az bir augment tekniği seçmelisin (parlaklık/kontrast/keskinlik/blur/gölge/gürültü/sıkıştırma)."}), 400
 
-    # Dosya adına hangi tekniklerin uygulandığını da ekliyoruz -- yoksa
-    # (bir bug olarak yaşadığımız gibi) aynı çıktı klasörüne önce "sadece
-    # blur", sonra "sadece parlaklık" ile ayrı ayrı çalıştırınca, ikisi de
-    # aynı "_aug.jpg" adını ürettiği için ikincisi birincinin üzerine
-    # sessizce yazıyordu. Artık "_augp" (parlaklık), "_augb" (blur) gibi
-    # farklı adlar üretildiği için aynı klasörde çakışmadan bir arada durabilirler.
     TEKNIK_KISALTMA = {
         "parlaklik": "p", "keskinlik": "k", "blur": "b", "golge": "g",
         "kontrast": "c", "gurultu": "n", "sikistirma": "s",
@@ -1349,87 +1472,54 @@ def augment_calistir():
     if not ciftler:
         return jsonify({"hata": "Filtreye uyan hiç görsel bulunamadı."}), 400
 
-    cikti_gorsel = cikti_klasoru / "images"
-    cikti_etiket = cikti_klasoru / "labels"
-    cikti_gorsel.mkdir(parents=True, exist_ok=True)
-    cikti_etiket.mkdir(parents=True, exist_ok=True)
+    with AUGMENT_ISLEM_KILIDI:
+        AUGMENT_ISLEM.update({
+            "calisiyor": True, "durduruldu": False, "islenen": 0,
+            "toplam": len(ciftler), "uretilen": 0, "hata": None,
+            "tamamlandi": False, "analiz": None, "iptal": False,
+        })
 
-    sinif_once = defaultdict(int)
-    sinif_sonra = defaultdict(int)
-    uretilen_toplam = 0
+    t = threading.Thread(
+        target=_augment_arka_plan,
+        args=(gorsel_klasoru, etiket_klasoru, data_yaml_yolu,
+              cikti_klasoru, filtre, mod, adet, aktif_teknikler,
+              teknik_etiketi, siniflar, ciftler),
+        daemon=True,
+    )
+    t.start()
 
-    for gorsel_yolu, etiket_yolu in ciftler:
-        for i in _etiketteki_sinif_idleri(etiket_yolu):
-            if 0 <= i < len(siniflar):
-                sinif_once[siniflar[i]] += 1
+    return jsonify({"ok": True, "toplam": len(ciftler)})
 
-        with Image.open(gorsel_yolu) as im:
-            for tekrar in range(adet):
-                teknik_degerleri = {}
-                for ad, ayar in aktif_teknikler.items():
-                    taban = float(ayar.get("taban", 1.0))
-                    hedef = float(ayar.get("hedef", taban))
-                    teknik_degerleri[ad] = taban if mod == "sabit" else _rastgele_arada(taban, hedef)
 
-                yeni_img = _augment_uygula(im, teknik_degerleri)
+@app.route("/api/augment/durum")
+def augment_durum():
+    with AUGMENT_ISLEM_KILIDI:
+        return jsonify(dict(AUGMENT_ISLEM))
 
-                ek = f"_aug{teknik_etiketi}{tekrar + 1}" if adet > 1 else f"_aug{teknik_etiketi}"
-                yeni_ad = f"{gorsel_yolu.stem}{ek}{gorsel_yolu.suffix}"
-                yeni_etiket_ad = f"{gorsel_yolu.stem}{ek}.txt"
 
-                yeni_img.save(cikti_gorsel / yeni_ad)
-                if etiket_yolu is not None:
-                    shutil.copy2(etiket_yolu, cikti_etiket / yeni_etiket_ad)
-                else:
-                    # Kaynak görselin hiç etiketi yoktu (nevfel.txt'nin
-                    # istediği "sadece images + data.yaml" girdi modu) --
-                    # YOLO kuralına göre "bu görselde nesne yok" boş bir
-                    # .txt dosyasıyla temsil edilir.
-                    (cikti_etiket / yeni_etiket_ad).write_text("", encoding="utf-8")
+@app.route("/api/augment/durdur", methods=["POST"])
+def augment_durdur():
+    with AUGMENT_ISLEM_KILIDI:
+        if AUGMENT_ISLEM["calisiyor"]:
+            AUGMENT_ISLEM["durduruldu"] = True
+    return jsonify({"ok": True})
 
-                uretilen_toplam += 1
-                for i in _etiketteki_sinif_idleri(etiket_yolu):
-                    if 0 <= i < len(siniflar):
-                        sinif_sonra[siniflar[i]] += 1
 
-    yeni_data_yaml = cikti_klasoru / "data.yaml"
-    # NOT: 'path' anahtarını BİLEREK yazmıyoruz -- bkz. data_yaml_yaz()'daki
-    # yorum.
-    icerik = {
-        "train": "images",
-        "val": "images",
-        "test": "images",
-        "names": {i: isim for i, isim in enumerate(siniflar)},
-    }
-    with open(yeni_data_yaml, "w", encoding="utf-8") as f:
-        yaml.safe_dump(icerik, f, allow_unicode=True, sort_keys=False)
+@app.route("/api/augment/devam", methods=["POST"])
+def augment_devam():
+    with AUGMENT_ISLEM_KILIDI:
+        if AUGMENT_ISLEM["calisiyor"]:
+            AUGMENT_ISLEM["durduruldu"] = False
+    return jsonify({"ok": True})
 
-    analiz_satirlari = [
-        "=" * 80,
-        "DATA AUGMENT RAPORU",
-        "=" * 80,
-        "",
-        f"Mod: {mod}",
-        f"Filtre: {filtre or '(yok, tüm etiketli görseller)'}",
-        f"İşlenen kaynak görsel: {len(ciftler)}",
-        f"Üretilen yeni görsel: {uretilen_toplam}",
-        "",
-        "Class bazında yeni üretilen etiket sayısı:",
-        "-" * 40,
-    ]
-    for isim in siniflar:
-        analiz_satirlari.append(f"  {isim:<24}{sinif_sonra.get(isim, 0):>8}")
-    analiz_metni = "\n".join(analiz_satirlari) + "\n"
-    (cikti_klasoru / "analiz.txt").write_text(analiz_metni, encoding="utf-8")
 
-    return jsonify({
-        "ok": True,
-        "cikti_klasoru": str(cikti_klasoru),
-        "data_yaml_yolu": str(yeni_data_yaml),
-        "islenen": len(ciftler),
-        "uretilen": uretilen_toplam,
-        "analiz": analiz_metni,
-    })
+@app.route("/api/augment/iptal", methods=["POST"])
+def augment_iptal():
+    with AUGMENT_ISLEM_KILIDI:
+        if AUGMENT_ISLEM["calisiyor"]:
+            AUGMENT_ISLEM["iptal"] = True
+            AUGMENT_ISLEM["durduruldu"] = False
+    return jsonify({"ok": True})
 
 
 # ============================================================
@@ -1521,6 +1611,8 @@ GORSEL_UZANTILARI_BIRLESTIR = GORSEL_UZANTILARI  # aynı liste, ayrı isimle ref
 def _birlestir_etiket_klasorunu_bul(gorsel_klasoru: Path) -> Path:
     if gorsel_klasoru.name == "images":
         return gorsel_klasoru.parent / "labels"
+    if gorsel_klasoru.parent.name.lower() == "images":
+        return gorsel_klasoru.parent.parent / "labels" / gorsel_klasoru.name
     return gorsel_klasoru.parent / "labels" / gorsel_klasoru.name
 
 
@@ -1536,6 +1628,28 @@ def _birlestir_etiket_dosyasini_bul(gorsel: Path, yeni_etiket_klasoru: Path, esk
     if eski.exists() and eski.stat().st_size > 0:
         return eski
     return None
+
+
+def _birlestir_data_yaml_bul(klasor: Path) -> Path | None:
+    aday = klasor
+    for _ in range(4):
+        deneme = aday / "data.yaml"
+        if deneme.exists():
+            return deneme
+        aday = aday.parent
+    return None
+
+
+def _birlestir_id_remap(etiket_icerik: str, remap: dict) -> str:
+    satirlar = []
+    for satir in etiket_icerik.strip().splitlines():
+        parcalar = satir.strip().split()
+        if not parcalar:
+            continue
+        eski_id = int(parcalar[0])
+        yeni_id = remap.get(eski_id, eski_id)
+        satirlar.append(f"{yeni_id} {' '.join(parcalar[1:])}")
+    return "\n".join(satirlar) + "\n" if satirlar else ""
 
 
 @app.route("/veribirlestir")
@@ -1560,6 +1674,38 @@ def veribirlestir_calistir():
     hedef_gorsel.mkdir(parents=True, exist_ok=True)
     hedef_etiket.mkdir(parents=True, exist_ok=True)
 
+    # --- 1) Tüm kaynaklardan data.yaml oku, birleşik class listesi oluştur ---
+    birlesik_siniflar = []  # sıralı birleşik liste
+    kaynak_yaml_map = {}    # kaynak_str -> (yaml_path, sinif_listesi)
+    for kaynak_str in kaynak_klasorler_str:
+        sinif_klasoru = Path(kaynak_str)
+        if not sinif_klasoru.is_dir():
+            continue
+        yaml_yolu = _birlestir_data_yaml_bul(sinif_klasoru)
+        kaynak_siniflar = []
+        if yaml_yolu:
+            try:
+                kaynak_siniflar = data_yaml_oku(yaml_yolu)
+            except Exception:
+                kaynak_siniflar = []
+        kaynak_yaml_map[kaynak_str] = (yaml_yolu, kaynak_siniflar)
+        for s in kaynak_siniflar:
+            if s not in birlesik_siniflar:
+                birlesik_siniflar.append(s)
+
+    # --- 2) Her kaynak için ID remap tablosu ---
+    kaynak_remap = {}
+    for kaynak_str, (_, kaynak_siniflar) in kaynak_yaml_map.items():
+        if not kaynak_siniflar:
+            kaynak_remap[kaynak_str] = {}
+            continue
+        remap = {}
+        for eski_id, sinif_adi in enumerate(kaynak_siniflar):
+            yeni_id = birlesik_siniflar.index(sinif_adi)
+            if eski_id != yeni_id:
+                remap[eski_id] = yeni_id
+        kaynak_remap[kaynak_str] = remap
+
     sonuclar = []
     toplam_kopyalanan = 0
     toplam_zaten_var = 0
@@ -1574,6 +1720,7 @@ def veribirlestir_calistir():
         sinif_adi = sinif_klasoru.name
         yeni_etiket_klasoru = _birlestir_etiket_klasorunu_bul(sinif_klasoru)
         eski_etiket_klasoru = _birlestir_eski_flat_etiket_klasoru(sinif_klasoru)
+        remap = kaynak_remap.get(kaynak_str, {})
 
         gorseller = [p for p in sinif_klasoru.iterdir() if p.suffix.lower() in GORSEL_UZANTILARI_BIRLESTIR]
 
@@ -1597,7 +1744,13 @@ def veribirlestir_calistir():
                 continue
 
             shutil.copy2(gorsel, hedef_gorsel_yolu)
-            shutil.copy2(kaynak_etiket, hedef_etiket_yolu)
+
+            if remap:
+                etiket_icerik = kaynak_etiket.read_text(encoding="utf-8")
+                with open(hedef_etiket_yolu, "w", encoding="utf-8") as f:
+                    f.write(_birlestir_id_remap(etiket_icerik, remap))
+            else:
+                shutil.copy2(kaynak_etiket, hedef_etiket_yolu)
             kopyalanan += 1
 
         sonuclar.append({
@@ -1612,6 +1765,17 @@ def veribirlestir_calistir():
         toplam_zaten_var += zaten_var
         toplam_etiketsiz += etiketsiz
 
+    # --- 3) Birleşik data.yaml yaz ---
+    if birlesik_siniflar:
+        birlesik_yaml = cikti_klasoru / "data.yaml"
+        icerik = {
+            "train": "images",
+            "val": "images",
+            "names": {i: s for i, s in enumerate(birlesik_siniflar)},
+        }
+        with open(birlesik_yaml, "w", encoding="utf-8") as f:
+            yaml.safe_dump(icerik, f, allow_unicode=True, sort_keys=False)
+
     return jsonify({
         "ok": True,
         "sonuclar": sonuclar,
@@ -1619,6 +1783,7 @@ def veribirlestir_calistir():
         "toplam_zaten_var": toplam_zaten_var,
         "toplam_etiketsiz": toplam_etiketsiz,
         "cikti_klasoru": str(cikti_klasoru),
+        "birlesik_siniflar": birlesik_siniflar,
     })
 
 
@@ -2107,6 +2272,21 @@ def egitim_grafik(dosya_adi):
 # fps/süre bilgisi (HUD) ekler.
 # ============================================================
 
+def _cikti_temizle(klasor: Path, maks: int = 50):
+    try:
+        dosyalar = sorted(
+            (f for f in klasor.iterdir() if f.is_file()),
+            key=lambda f: f.stat().st_mtime,
+        )
+    except FileNotFoundError:
+        return
+    for d in dosyalar[: max(0, len(dosyalar) - maks)]:
+        try:
+            d.unlink()
+        except OSError:
+            pass
+
+
 TEST_MODEL_ONBELLEK = {}  # {model_yolu: YOLO nesnesi} -- her seferinde yeniden yüklememek için
 TEST_CIKTI_KLASORU = Path(__file__).resolve().parent / "static" / "test_ciktilari"
 
@@ -2169,6 +2349,7 @@ def test_gorsel():
     cizili = _hud_ciz(cv2, cizili, fps, sure_ms, Path(model_yolu).name)
 
     TEST_CIKTI_KLASORU.mkdir(parents=True, exist_ok=True)
+    _cikti_temizle(TEST_CIKTI_KLASORU)
     dosya_adi = f"sonuc_{int(_time.time() * 1000)}.jpg"
     cikti_yolu = TEST_CIKTI_KLASORU / dosya_adi
     cv2.imwrite(str(cikti_yolu), cizili)
@@ -2192,6 +2373,39 @@ def test_gorsel():
     })
 
 
+TEST_GORSEL_KLASORU_CACHE = {"klasor": None, "gorseller": []}
+
+
+@app.route("/api/test/klasor_yukle", methods=["POST"])
+def test_klasor_yukle():
+    veri = request.get_json()
+    klasor_str = veri.get("klasor", "").strip()
+    if not klasor_str or not Path(klasor_str).is_dir():
+        return jsonify({"hata": f"Klasör bulunamadı: {klasor_str}"}), 400
+
+    klasor = Path(klasor_str)
+    gorseller = sorted(
+        str(p) for p in klasor.iterdir()
+        if p.suffix.lower() in GORSEL_UZANTILARI
+    )
+    if not gorseller:
+        return jsonify({"hata": "Klasörde görsel bulunamadı."}), 400
+
+    TEST_GORSEL_KLASORU_CACHE["klasor"] = klasor_str
+    TEST_GORSEL_KLASORU_CACHE["gorseller"] = gorseller
+
+    return jsonify({"ok": True, "toplam": len(gorseller)})
+
+
+@app.route("/api/test/rastgele_gorsel", methods=["POST"])
+def test_rastgele_gorsel():
+    gorseller = TEST_GORSEL_KLASORU_CACHE.get("gorseller", [])
+    if not gorseller:
+        return jsonify({"hata": "Önce bir görsel klasörü seç."}), 400
+    secilen = random.choice(gorseller)
+    return jsonify({"ok": True, "gorsel_yolu": secilen})
+
+
 # ============================================================
 # MODEL TEST -- VİDEO modu (nevfel.txt madde 5, devamı)
 # Video dosyasını kare kare işler (arka plan thread'inde, eğitimdeki
@@ -2213,27 +2427,46 @@ VIDEO_TEST_DURUMU = {
 VIDEO_TEST_KILIDI = threading.Lock()
 
 
-def _tarayici_uyumlu_yap(ham_yol: Path, hedef_yol: Path) -> bool:
-    """cv2'nin mp4v ile yazdığı videoyu ffmpeg ile H.264'e çevirir --
-    pip'in opencv-python paketi lisans yüzünden H.264 encoder içermediği
-    için VideoWriter'dan doğrudan tarayıcı-uyumlu video alamıyoruz.
-    imageio-ffmpeg, sistemde kurulu ffmpeg'e gerek kalmadan küçük bir
-    ffmpeg binary'si indirip kullanır. Başarısız olursa (paket kurulu
-    değil, ffmpeg çalışmadı, vb.) sessizce False döner -- çağıran taraf
-    bu durumda ham dosyayı öylece kullanır."""
+def _ffmpeg_yolu_bul():
     try:
-        import subprocess
         import imageio_ffmpeg
-
-        ffmpeg_yolu = imageio_ffmpeg.get_ffmpeg_exe()
-        subprocess.run(
-            [ffmpeg_yolu, "-y", "-i", str(ham_yol), "-c:v", "libx264",
-             "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(hedef_yol)],
-            check=True, capture_output=True,
-        )
-        return hedef_yol.exists()
+        return imageio_ffmpeg.get_ffmpeg_exe()
     except Exception:
-        return False
+        pass
+    for aday in ("ffmpeg", "/usr/bin/ffmpeg"):
+        if shutil.which(aday):
+            return aday
+    return None
+
+
+def _tarayici_uyumlu_yap(ham_yol: Path, hedef_yol: Path) -> str | None:
+    """cv2'nin mp4v ile yazdığı videoyu tarayıcı-uyumlu formata çevirir.
+    Linux'ta WebKit2 H.264 desteklemeyebilir, bu yüzden önce VP9/WebM
+    denenir, başarısız olursa H.264/MP4 denenir.
+    Başarılı olursa çıktı dosyasının Path'ini (str) döndürür, yoksa None."""
+    ffmpeg = _ffmpeg_yolu_bul()
+    if not ffmpeg:
+        return None
+    try:
+        if sys.platform.startswith("linux"):
+            webm_yol = hedef_yol.with_suffix(".webm")
+            subprocess.run(
+                [ffmpeg, "-y", "-i", str(ham_yol), "-c:v", "libvpx-vp9",
+                 "-crf", "30", "-b:v", "0", str(webm_yol)],
+                check=True, capture_output=True, timeout=600,
+            )
+            if webm_yol.exists():
+                return str(webm_yol)
+        subprocess.run(
+            [ffmpeg, "-y", "-i", str(ham_yol), "-c:v", "libx264",
+             "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(hedef_yol)],
+            check=True, capture_output=True, timeout=600,
+        )
+        if hedef_yol.exists():
+            return str(hedef_yol)
+        return None
+    except Exception:
+        return None
 
 
 def _video_testini_baslat_arka_planda(model_yolu: str, video_yolu: str, conf: float):
@@ -2301,15 +2534,17 @@ def _video_testini_baslat_arka_planda(model_yolu: str, video_yolu: str, conf: fl
         # dene. Başarısız olursa (ffmpeg indirilemedi/çalışmadı), ham
         # dosyayı öylece son isimle kullan -- en azından indirilip VLC
         # gibi bir oynatıcıda izlenebilir.
-        donusturuldu = _tarayici_uyumlu_yap(ham_yol, cikti_yolu)
-        if donusturuldu:
+        donusmus_yol = _tarayici_uyumlu_yap(ham_yol, cikti_yolu)
+        if donusmus_yol:
             ham_yol.unlink(missing_ok=True)
+            gercek_cikti = Path(donusmus_yol)
         else:
             ham_yol.rename(cikti_yolu)
+            gercek_cikti = cikti_yolu
 
-        VIDEO_TEST_DURUMU["cikti_url"] = f"/static/test_ciktilari/{dosya_adi}"
-        VIDEO_TEST_DURUMU["cikti_dosya_yolu"] = str(cikti_yolu)
-        VIDEO_TEST_DURUMU["tarayicida_oynar"] = donusturuldu
+        VIDEO_TEST_DURUMU["cikti_url"] = f"/static/test_ciktilari/{gercek_cikti.name}"
+        VIDEO_TEST_DURUMU["cikti_dosya_yolu"] = str(gercek_cikti)
+        VIDEO_TEST_DURUMU["tarayicida_oynar"] = donusmus_yol is not None
         VIDEO_TEST_DURUMU["tamamlandi"] = True
 
     except Exception as e:
@@ -3468,6 +3703,7 @@ def _izleme_dongusu(marka_model_yolu: str, plaka_model_yolu: str, video_yolu: st
                 break
             islenen += 1
             IZLEME_DURUMU["islenen_kare"] = islenen
+            kare_yukseklik, kare_genislik = kare.shape[:2]
 
             sonuc = marka_model.track(
                 kare, persist=True, conf=conf, agnostic_nms=True,
@@ -3492,6 +3728,9 @@ def _izleme_dongusu(marka_model_yolu: str, plaka_model_yolu: str, video_yolu: st
                             "gorsel_kare": None,
                         }
                         IZLEME_DURUMU["gorulen_arac_sayisi"] += 1
+                        # İlk görüldüğü kare -- şimdilik "en iyi" kare bu
+                        # (aşağıdaki cizim/kaydetme mantığı bunu kullanacak).
+                        _izleme_yeni_en_iyi_kare = True
                     else:
                         kayit = bekleyenler[track_id]
                         kayit["son_gorulen_kare"] = islenen
@@ -3502,8 +3741,49 @@ def _izleme_dongusu(marka_model_yolu: str, plaka_model_yolu: str, video_yolu: st
                         # önlemek için basit bir "en iyi kareyi seç"
                         # yaklaşımı (tam bir çoğunluk oylaması değil,
                         # ama tek kareye güvenmekten daha sağlam).
-                        if guven > kayit["guven"]:
+                        _izleme_yeni_en_iyi_kare = guven > kayit["guven"]
+                        if _izleme_yeni_en_iyi_kare:
                             kayit["class_adi"], kayit["guven"] = class_adi, guven
+
+                    # ÖNEMLİ: kaydedilecek görsel (gorsel_kare) ESKİDEN her
+                    # karede koşulsuz güncelleniyordu -- bu, araç kadrajdan
+                    # ÇIKARKEN (genelde en kötü/en kırpık an) görülen son
+                    # kareyi kalıcı kılıyordu (kullanıcı geri bildirimi:
+                    # kayıtlar hep aracın bariyerde yarı kadraj dışı olduğu
+                    # anı gösteriyordu). Artık SADECE yukarıdaki "en iyi
+                    # güven" güncellendiği karede (ya da ilk görüldüğü
+                    # karede) kaydediliyor -- yani en güvenilir sınıflandırma
+                    # hangi karede yapıldıysa, görsel de O karede donduruluyor.
+                    #
+                    # EK DÜZELTME (aynı gün, devam): tek başına "en yüksek
+                    # güven" yeterli değildi -- araç kadrajın kenarında,
+                    # sadece küçük bir köşesi görünürken bile model bazen
+                    # yüksek güvenle (yanlışlıkla) sınıflandırabiliyor, bu
+                    # da o kırpık kareyi "en iyi" seçtiriyordu. Şimdi kutunun
+                    # kare kenarına DEĞİP DEĞMEDİĞİNE de bakıyoruz: kenara
+                    # değmeyen (aracın tamamı kadrajda olan) bir kare zaten
+                    # kaydedilmişse, kenara değen daha yüksek güvenli bir
+                    # kareyle onun üzerine YAZILMIYOR -- kenara değmeyen bir
+                    # kare hiç bulunamadıysa (fallback) yine en iyi güvene
+                    # göre güncellenmeye devam ediyor.
+                    # (etiketleme_arayuzu/app.py'deki 2026-08-07 düzeltmesinin
+                    # bu kopyaya taşınmış hali, 2026-08-13.)
+                    KENAR_PAYI = 4
+                    kutu_kenara_deger_mi = (
+                        x1 <= KENAR_PAYI or y1 <= KENAR_PAYI or
+                        x2 >= kare_genislik - KENAR_PAYI or y2 >= kare_yukseklik - KENAR_PAYI
+                    )
+                    kayit_ref = bekleyenler[track_id]
+                    onceki_tam_mi = kayit_ref.get("gorsel_tam_mi", False)
+                    gorsel_guncellenmeli = _izleme_yeni_en_iyi_kare and (not kutu_kenara_deger_mi or not onceki_tam_mi)
+
+                    if gorsel_guncellenmeli:
+                        cizili_en_iyi = kare.copy()
+                        cv2.rectangle(cizili_en_iyi, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        cv2.putText(cizili_en_iyi, f"#{track_id} {class_adi}", (x1, max(0, y1 - 8)),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                        kayit_ref["gorsel_kare"] = cizili_en_iyi
+                        kayit_ref["gorsel_tam_mi"] = not kutu_kenara_deger_mi
 
             # Kayıp (bu karede görünmeyen) araçları kontrol et -- yeterince
             # uzun süredir kayıpsa finalize et (DB'ye yaz, bekleyenlerden çıkar).
@@ -3534,16 +3814,12 @@ def _izleme_dongusu(marka_model_yolu: str, plaka_model_yolu: str, video_yolu: st
             yukseklik, genislik = kare.shape[:2]
             for track_id, (arac_kutu, class_adi, guven) in gorulen_bu_karede.items():
                 kayit = bekleyenler[track_id]
-
-                # Görsel anlık görüntüsünü HER karede güncelliyoruz (en
-                # son/en net görünüşü tutmak için) -- finalize anında bu
-                # kullanılacak.
-                cizili_kare = kare.copy()
                 x1, y1, x2, y2 = arac_kutu
-                cv2.rectangle(cizili_kare, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(cizili_kare, f"#{track_id} {kayit['class_adi']}", (x1, max(0, y1 - 8)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                kayit["gorsel_kare"] = cizili_kare
+
+                # NOT: "gorsel_kare" artık BURADA güncellenmiyor -- yukarıdaki
+                # sınıflandırma döngüsünde, sadece en iyi/en net karede
+                # (ve kenara değmiyorsa) güncelleniyor. Bkz. yukarıdaki
+                # "ÖNEMLİ" yorumu.
 
                 if kayit["plaka_gecerli"]:
                     continue  # zaten geçerli formatlı bir okuma var, tekrar denemeye gerek yok
@@ -3665,15 +3941,9 @@ class Api:
         sonuc = pencere.create_file_dialog(webview.FOLDER_DIALOG)
         if not sonuc:
             return ""
-        # pywebview sürümüne göre tek string ya da (string,) tuple dönebilir
         return sonuc[0] if isinstance(sonuc, (list, tuple)) else sonuc
 
     def dosya_sec(self, tur: str = "yaml"):
-        # 'tur' parametresi, hangi sayfadan çağrıldığına göre dosya
-        # seçme penceresinde varsayılan filtreyi doğru dosya tipine
-        # ayarlar -- yoksa her yerde (model/görsel/video seçerken bile)
-        # sadece YAML filtresi çıkıyordu, kullanıcı her seferinde elle
-        # "Tüm dosyalar"a çevirmek zorunda kalıyordu.
         FILTRELER = {
             "yaml": ("YAML dosyaları (*.yaml;*.yml)", "Tüm dosyalar (*.*)"),
             "model": ("Model dosyaları (*.pt)", "Tüm dosyalar (*.*)"),
@@ -3682,10 +3952,24 @@ class Api:
         }
         file_types = FILTRELER.get(tur, ("Tüm dosyalar (*.*)",))
 
+        varsayilan_dizin = ""
+        proje_kok = Path(__file__).resolve().parent
+        if tur == "model":
+            w = proje_kok / "weights"
+            if w.is_dir():
+                varsayilan_dizin = str(w)
+        elif tur in ("gorsel", "video"):
+            t = proje_kok / "test_data"
+            if t.is_dir():
+                varsayilan_dizin = str(t)
+
         pencere = webview.windows[0]
+        kwargs = {"file_types": file_types}
+        if varsayilan_dizin:
+            kwargs["directory"] = varsayilan_dizin
         sonuc = pencere.create_file_dialog(
             webview.OPEN_DIALOG,
-            file_types=file_types,
+            **kwargs,
         )
         if not sonuc:
             return ""

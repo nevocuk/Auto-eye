@@ -55,7 +55,7 @@ ve büyük indirme gerektirdiği için) bu oturumda tetiklenmedi -- kullanıcı
 kendi PC'sinde denemeli.
 
 ### Neden
-Kullanıcı önce evrensel_toolset'in GERÇEKTEN proje-nötr olmasını istedi
+Önce evrensel_toolset'in GERÇEKTEN proje-nötr olması gerekiyordu
 ("herhangi biri için, fine-tuning'le başlamak istemiyor olabilir" gibi),
 sonra "gerekenler diye bir kutu istiyorum, bir tuşla kütüphaneleri/
 modelleri/COCO'yu kurabilsin" dedi -- "iyi olursa benimkine de ekle"
