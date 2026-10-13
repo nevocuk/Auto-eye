@@ -10,7 +10,17 @@ Projenin asıl farkı salt plaka okuma (ANPR) değil, **Fusion** katmanı: plaka
 
 ## Ekran Görüntüleri
 
-_Yakında eklenecek._
+| Toolset ana menüsü | Sistem mimarisi |
+|---|---|
+| ![Toolset ana menüsü](docs/img/hub.png) | ![Sistem mimarisi](docs/img/mimari.png) |
+
+**Fusion:** aynı fotoğrafta iki plaka okunuyor, renk bulunuyor, modelin tanımadığı araç "tanımlanmadı" olarak işaretleniyor (arkadaki aracın plakası gizlendi).
+
+![Fusion çıktısı](docs/img/fusion.png)
+
+**Model Test:** üç sınıflı ilk modelin örnek görsellerdeki çıktısı (plakalar gizlendi).
+
+![Model test çıktısı](docs/img/model_test.png)
 
 ---
 
@@ -98,10 +108,7 @@ otopark/
 ├── veri/                    # Eğitim verisi (data.yaml + split)
 ├── runs/                    # Eğitim çıktıları
 ├── db/                      # SQLite veritabanı
-├── bilgi_notlari/           # Referans notlar ve terimler sözlüğü
-├── PROJE_BRIEF_OTOPARK.md   # Tasarım dokümanı
-├── ILERLEME_GUNLUGU.md      # Geliştirme günlüğü
-└── STAJ_GUNLUK_OZET.md      # Staj raporu özeti
+└── bilgi_notlari/           # Referans notlar ve terimler sözlüğü
 ```
 
 ---

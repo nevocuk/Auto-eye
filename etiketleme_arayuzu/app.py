@@ -15,7 +15,7 @@ Neden yerel sunucu (Flask) + tarayıcı arayüzü:
   (senin bilgisayarında çalışan Python programı) dosya okuma/yazmayı
   yapıyor, tarayıcı sadece arayüzü gösteriyor.
 
-İki girdi modu (nevfel.txt'deki gereksinim):
+İki girdi modu (görev listesindeki gereksinim):
   1) Sadece görsel klasörü (+ data.yaml veya elle yazılan sınıf listesi)
      -> etiket klasörü henüz yoksa oluşturulur, sıfırdan etiketlersin.
   2) Görsel + etiket klasörü birlikte (var olan etiketler)
@@ -132,7 +132,7 @@ def data_yaml_sinif_guncelle(yol: Path, siniflar: list[str]):
 @app.route("/")
 def anasayfa():
     # "Hub" — tüm araçların (etiketleme, dataset splitter, augment, eğitim,
-    # test) tek bir yerden erişildiği ana menü. nevfel.txt'deki "tüm
+    # test) tek bir yerden erişildiği ana menü. görev listesindeki "tüm
     # arayüzlere tek bir arayüz üstünden erişilebilinir olmalı" şartı.
     return render_template("index.html")
 
@@ -677,7 +677,7 @@ def _girdi_klasorlerini_coz(gorsel_klasoru_str, etiket_klasoru_str, data_yaml_st
 
 
 # ============================================================
-# DATASET SPLITTER (nevfel.txt madde 2)
+# DATASET SPLITTER (görev listesi madde 2)
 # Girdi: images/ + labels/ (+ data.yaml). Çıktı: train/val/test'e
 # bölünmüş images/+labels/ + yeni data.yaml + analiz.txt.
 # ============================================================
@@ -783,7 +783,7 @@ def _gorsel_boyut_analizi(bolumler: dict) -> list[str]:
 
 
 def _analiz_raporu_olustur(bolumler: dict, siniflar: list[str], eksik_sayisi: int, seed=None) -> str:
-    """nevfel.txt'de örneği verilen formata uygun analiz.txt içeriğini
+    """görev listesinde örneği verilen formata uygun analiz.txt içeriğini
     üretir: bölüm özeti (görsel/etiket/eşleşen/nesne/eksik sayıları) ve
     sınıf dağılımı (her sınıftan train/val/test'te kaçar tane var)."""
     satirlar = []
@@ -965,7 +965,7 @@ def splitter_calistir():
 
 
 # ============================================================
-# DATA AUGMENT (nevfel.txt madde 3)
+# DATA AUGMENT (görev listesi madde 3)
 # Girdi: images/ + labels/ (+ data.yaml). Çıktı: BAŞKA bir klasöre
 # çoğaltılmış images/+labels/ (+ data.yaml). Etiketler pixel-seviyeli
 # augment'lerden (parlaklık/keskinlik/blur/gölge) etkilenmediği için
@@ -998,7 +998,7 @@ def _etiketteki_sinif_idleri(etiket_yolu: Path | None) -> set[int]:
 
 
 def _gorselleri_filtrele(gorsel_klasoru: Path, etiket_klasoru: Path, siniflar: list[str], filtre: str):
-    """filtre boşsa hepsini döndürür (ETİKETSİZ görseller DAHİL -- nevfel.txt
+    """filtre boşsa hepsini döndürür (ETİKETSİZ görseller DAHİL -- görev listesi
     Augment'in de "sadece images + data.yaml" girdisiyle çalışabilmesini
     istiyor, yani labels klasörü hiç olmasa da araç çalışmalı). Filtre
     doluysa, etiketinde filtreyi İÇEREN (case-insensitive) bir sınıf adı
@@ -1204,7 +1204,7 @@ def augment_on_izle():
 
     return jsonify({
         # 2026-08-05: "etiketli" adı yanıltıcıydı -- artık etiketsiz
-        # görseller de sayılıyor (nevfel.txt'nin istediği images-only girdi
+        # görseller de sayılıyor (görev listesinin istediği images-only girdi
         # modu). Toplam görsel sayısı bu.
         "toplam_etiketli": len(tum_ciftler),
         "filtreyle_eslesen": len(eslesen_ciftler),
@@ -1298,7 +1298,7 @@ def augment_calistir():
                 if etiket_yolu is not None:
                     shutil.copy2(etiket_yolu, cikti_etiket / yeni_etiket_ad)
                 else:
-                    # Kaynak görselin hiç etiketi yoktu (nevfel.txt'nin
+                    # Kaynak görselin hiç etiketi yoktu (görev listesinin
                     # istediği "sadece images + data.yaml" girdi modu) --
                     # YOLO kuralına göre "bu görselde nesne yok" boş bir
                     # .txt dosyasıyla temsil edilir.
@@ -1540,7 +1540,7 @@ def veribirlestir_calistir():
 
 
 # ============================================================
-# ÖN-ETİKETLEME (yardımcı araç -- nevfel.txt'nin zorunlu maddelerinden
+# ÖN-ETİKETLEME (yardımcı araç -- görev listesinin zorunlu maddelerinden
 # biri değil, ama elle kutu çizme işini hızlandırmak için eklendi).
 #
 # Fikir: bir klasördeki TÜM görsellerin aynı class'a ait olduğunu zaten
@@ -1729,7 +1729,7 @@ def onetiket_calistir():
 
 
 # ============================================================
-# MODEL EĞİTİMİ (nevfel.txt madde 4)
+# MODEL EĞİTİMİ (görev listesi madde 4)
 # Girdi: bir başlangıç modeli (yolo11n.pt / yolo11n-seg.pt / yolo11n-pose.pt
 # ya da devam etmek istediğin bir last.pt/best.pt) + data.yaml + eğitim
 # parametreleri. Eğitim ARKA PLAN THREAD'İNDE çalışır (Flask'ı kilitlemesin
@@ -2023,7 +2023,7 @@ def egitim_grafik(dosya_adi):
 
 
 # ============================================================
-# MODEL TEST (nevfel.txt madde 5) -- şimdilik GÖRSEL modu.
+# MODEL TEST (görev listesi madde 5) -- şimdilik GÖRSEL modu.
 # Video ve webcam modları ayrı adımlarda eklenecek (adım adım plan).
 # Eğitilmiş bir modeli (best.pt gibi) seçip bir görsel üzerinde çalıştırır,
 # tespit edilen kutuları + sınıf adı/güven skorunu çizer, üstüne bir de
@@ -2204,7 +2204,7 @@ def test_klasor():
 
 
 # ============================================================
-# MODEL TEST -- VİDEO modu (nevfel.txt madde 5, devamı)
+# MODEL TEST -- VİDEO modu (görev listesi madde 5, devamı)
 # Video dosyasını kare kare işler (arka plan thread'inde, eğitimdeki
 # aynı canlı-ilerleme deseniyle), her kareye tespit kutuları + HUD
 # (fps/süre) çizer, sonucu yeni bir video dosyası olarak kaydeder.
@@ -2376,7 +2376,7 @@ def test_video_durum():
 
 
 # ============================================================
-# MODEL TEST -- WEBCAM modu (nevfel.txt madde 5, devamı)
+# MODEL TEST -- WEBCAM modu (görev listesi madde 5, devamı)
 # Video modundan farkı: sabit bir dosya değil, bilgisayarın webcam'i
 # SÜREKLİ açık kalıyor. Arka plan thread'i sürekli kare okuyup modeli
 # çalıştırıyor, en son işlenmiş kareyi bellekte tutuyor. Tarayıcıya
@@ -2552,10 +2552,10 @@ def test_webcam_stream():
 
 
 # ============================================================
-# MODEL TEST -- METRİKLER (mAP) modu (nevfel.txt madde 5, devamı)
+# MODEL TEST -- METRİKLER (mAP) modu (görev listesi madde 5, devamı)
 # Görsel/video/webcam modları tek bir tahmini gösteriyor ama bir
 # tahminin "iyi" olup olmadığını (gerçek etiketlerle karşılaştırarak)
-# SAYISAL olarak ölçmüyorlardı -- nevfel.txt bunun için mAP (mean
+# SAYISAL olarak ölçmüyorlardı -- görev listesi bunun için mAP (mean
 # Average Precision) değerinin arayüzde görünmesini istiyor. mAP tek
 # bir görselde hesaplanamaz (gerçek/ground-truth etiket gerekir) --
 # bunun için etiketli bir VAL seti (Dataset Splitter'ın ürettiği
@@ -2634,7 +2634,7 @@ def test_metrik_durum():
 
 # ============================================================
 # FUSION -- PLAKA + MARKA/MODEL BİRLEŞTİRME (OtoGöz'e özel bir araç,
-# nevfel.txt'nin istediği evrensel setin dışında -- ama diğer araçlarla
+# görev listesinin istediği evrensel setin dışında -- ama diğer araçlarla
 # aynı desende: model(ler) seç, görsel seç, çalıştır, sonucu + adım adım
 # logu arayüzden gör). Mantığın komut satırı hali kod/06_fusion.py'de de
 # var (tek başına da çalıştırılabilir), burada AYNI adımlar arayüzden:
@@ -2764,7 +2764,7 @@ def _fusion_db_kaydet(gorsel_yolu: str, sonuc_gorsel_yolu: str, araclar: list) -
 def _fusion_ocr_okuyucusunu_yukle():
     # ESKİDEN EasyOCR (genel amaçlı, plakaya özel eğitilmemiş bir OCR)
     # kullanıyorduk -- gerçek fotoğraflarla test ederken karakter
-    # karıştırma/eksik okuma sorunları yaşandı (bkz. ILERLEME_GUNLUGU.md).
+    # karıştırma/eksik okuma sorunları yaşandı.
     # Bunun yerine artık PLAKAYA ÖZEL eğitilmiş "fast-plate-ocr"
     # kütüphanesini kullanıyoruz -- profesyonel ANPR sistemlerinin de
     # yaptığı gibi, dar bir alanda (sadece plaka metni) eğitilmiş bir
@@ -3982,7 +3982,7 @@ class Api:
     `window.pywebview.api.<metod>()` şeklinde çağrılabilen Python
     fonksiyonları. Native (gerçek Windows) klasör/dosya seçme
     pencerelerini burada açıyoruz, böylece kullanıcı hiçbir yolu elle
-    yazmıyor — SADEKTECH'in kendi arayüzündeki gibi.
+    yazmıyor.
     """
 
     def klasor_sec(self):

@@ -8,8 +8,8 @@ Ne yapar (baştan sona):
   2) Her plaka kutusu OCR'a (fast-plate-ocr, plakaya özel eğitilmiş bir model)
      verilip metne çevrilir -- EasyOCR (genel amaçlı OCR) yerine bunu
      kullanıyoruz çünkü gerçek fotoğraflarla test ederken EasyOCR karakter
-     karıştırma/eksik okuma sorunları yaşattı (bkz. ILERLEME_GUNLUGU.md,
-     "Adım 6"). fast-plate-ocr'ın kendi plaka TESPİTİ yok, sadece kırpılmış
+     karıştırma/eksik okuma sorunları yaşattı.
+     fast-plate-ocr'ın kendi plaka TESPİTİ yok, sadece kırpılmış
      bir plaka görüntüsünü okuyor -- tespiti hâlâ bizim plaka_tespit.pt
      modelimiz yapıyor.
   3) EŞLEŞTİRME: bulunan her plaka kutusu, HANGİ araç kutusuna ait? Bunu plaka

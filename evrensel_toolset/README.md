@@ -1,7 +1,7 @@
 # Evrensel Toolset (bağımsız kopya)
 
 Bu klasör, `otopark/etiketleme_arayuzu/`'nün bağımsız bir kopyası --
-nevfel.txt'nin istediği evrensel 5 araçlık seti (Etiketleme, Dataset
+görev listesinin istediği evrensel 5 araçlık seti (Etiketleme, Dataset
 Splitter, Data Augment, Model Eğitimi, Model Test) + genel amaçlı 3 ek
 araç (Ön-Etiketleme, Video'dan Kare Çıkar, Veri Birleştir) içeriyor.
 Hiçbir class/model/veri seti varsayımı yok -- herhangi bir YOLO
@@ -27,7 +27,7 @@ Orijinal `otopark/etiketleme_arayuzu/` doğrudan OtoGöz projesi için,
 Bu kopyada Fusion **VARSAYILAN OLARAK KAPALI** — hub'da (ana sayfa)
 görünmüyor, `/fusion` adresine gidilirse "kapalı" notu gösteriliyor.
 Sebebi: Fusion tek bir projeye (plaka okuma + araç marka/model tanıma)
-özel, nevfel.txt'nin istediği evrensel setin dışında — bu kopyayı başka
+özel, görev listesinin istediği evrensel setin dışında — bu kopyayı başka
 bir YOLO projesi için kullanacak biri için anlamsız/kafa karıştırıcı.
 
 **Nasıl açılır:** Ana sayfanın en altındaki "Gelişmiş (proje-özel)

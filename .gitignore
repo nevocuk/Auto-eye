@@ -55,3 +55,14 @@ gelistirmeler.txt
 Thumbs.db
 *.swp
 *~
+
+# Kisisel notlar ve staj belgeleri (yerelde kalir, depoda yer almaz)
+staj_raporu.docx
+STAJ_GUNLUK_OZET.md
+ILERLEME_GUNLUGU.md
+DUZENLEME_LOGU.md
+PROJE_BRIEF_OTOPARK.md
+sorunlar_ve_cozumler/
+nevfel.txt
+araba2.txt
+olmayacaklar .txt

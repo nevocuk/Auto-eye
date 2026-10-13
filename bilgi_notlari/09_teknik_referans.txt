@@ -283,7 +283,7 @@ Akış (4 adım, log kutusunda [1/4]..[4/4] olarak görünür):
    -- birkaç aşırı parlak/karanlık piksel/yansıma ortalamayı kolayca
    çarpıtabiliyordu) alınır ve basit eşiklerle bir renk ismine
    ("beyaz/siyah/gri/gümüş/kırmızı/turuncu/sarı/yeşil/turkuaz/mavi/
-   mor") eşlenir. Bu, PROJE_BRIEF'in 2026-07-28 güncellemesinde zaten
+   mor") eşlenir. Bu, tasarım dokümanının 2026-07-28 güncellemesinde zaten
    planlanmış ("Renk tespiti eğitim gerektirmez") ama önceki
    oturumlarda hiç kodlanmamış bir bileşendi (bileşen 3'ün ikinci
    yarısı) -- kullanıcı sorunca fark edilip aynı gün eklendi.
@@ -336,7 +336,7 @@ sistemlerinin de yaptığı gibi, dar bir alanda (sadece plaka metni)
 eğitilmiş bir model kullanılıyor artık. `_fusion_bloklari_birlestir`/
 `_fusion_en_iyi_sonucu_sec` (EasyOCR'ın çok-bloklu sonuçlarını
 birleştirmek için gerekliydi) kaldırıldı, çünkü fast-plate-ocr zaten
-tek, temiz bir metin döndürüyor. Detay: ILERLEME_GUNLUGU.md "Adım 6"
+tek, temiz bir metin döndürüyor.
 girdisi (fast-plate-ocr geçişi notu güncellendi).
 
 ===============================================================
@@ -522,7 +522,7 @@ BİR satır + `static/fusion_ciktilari/izleme_*.jpg` kare görseli.
 ===============================================================
 16) PROJENİN GENEL DURUMU (özet)
 ===============================================================
-Toolset (evrensel araç seti — nevfel.txt gereksinimi): 8 araç
+Toolset (evrensel araç seti — görev listesi gereksinimi): 8 araç
 (Etiketleme, Splitter, Augment, Model Eğitimi, Model Test, Ön-Etiketleme,
 Video'dan Kare Çıkar, Veri Birleştir) + OtoGöz'e özel 9. araç (Fusion)
 tamamlandı ve çalışıyor.
@@ -578,7 +578,7 @@ ve daha önce TAM görünümlü bir kare zaten kaydedilmişse, kısmi görünüm
 ait daha yüksek güvenli bir tahmin bile o tam kareyi EZMİYOR.
 
 **Renk tespiti (bileşen 3'ün ikinci yarısı) tamamlandı (2026-08-07).**
-PROJE_BRIEF'te planlanıp o zamana kadar hiç kodlanmamış tek eksikti --
+tasarım dokümanında planlanıp o zamana kadar hiç kodlanmamış tek eksikti --
 proje geneli bir denetim sırasında fark edilip aynı gün eklendi. Detay
 ve NASIL çalıştığı: bölüm 13'teki "4.5) RENK TESPİTİ" alt başlığı.
 Kalan tek bilinen boşluk artık **#8'in "genişletme" (opsiyonel) parçası

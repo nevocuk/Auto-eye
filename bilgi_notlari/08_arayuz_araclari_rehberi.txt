@@ -98,7 +98,7 @@ kayıt dosyası üretmez. Dördüncü bir "Metrikler (mAP)" sekmesi var:
 model + val içeren bir data.yaml seçilir, arka planda ultralytics'in
 model.val() fonksiyonu çalıştırılır (uzun sürebileceği için thread +
 polling ile, video modundaki aynı desen), sonuçta mAP50/mAP50-95/
-precision/recall sayıları gösterilir (nevfel.txt madde 5'in istediği
+precision/recall sayıları gösterilir (görev listesi madde 5'in istediği
 mAP gereksinimi).
 
 ===============================================================
@@ -137,7 +137,7 @@ yapılabilir.
 11) FUSION — PLAKA + MARKA/MODEL BİRLEŞTİRME (/fusion)
 ===============================================================
 Dosyalar: templates/fusion.html, static/fusion.js
-Bu araç diğerlerinden farklı — nevfel.txt'nin istediği evrensel setin
+Bu araç diğerlerinden farklı — görev listesinin istediği evrensel setin
 DIŞINDA, doğrudan OtoGöz projesine özel. İKİ mod var (üstteki sekmeler):
 
 1) "Tekli Görsel" — İKİ modeli (kendi marka/model modeliniz + plaka
