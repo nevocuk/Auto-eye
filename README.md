@@ -4,7 +4,7 @@ Sabit güvenlik kamerasından geçen araçları **plaka + marka/model + renk** �
 
 Projenin asıl farkı salt plaka okuma (ANPR) değil, **Fusion** katmanı: plaka OCR'ı bulanık/eksik okuduğunda bile marka-model ve renk sinyalleriyle birleştirip güven kademeli bir çıkarım yapması.
 
-> Tamamen hayali senaryo ve verilerle geliştirilmiştir, gerçek kişi/plaka verisi kullanılmamıştır.
+> Senaryo (otopark, araç kayıtları) hayalidir. Marka/model eğitiminde açık akademik veri seti **CompCars** ve kendi hazırladığım görseller kullanıldı. README'deki görsellerde plakalar gizlenmiştir; depoda gerçek plaka ya da kişisel veri yoktur (veritabanı repoya eklenmez).
 
 ---
 
@@ -103,11 +103,14 @@ otopark/
 │   ├── 04_veri_birlestir.py
 │   ├── 05_video_kare_cikar.py
 │   ├── 06_fusion.py          # Fusion'ın GUI'siz hali
-│   └── 07_veritabani.py
+│   ├── 07_veritabani.py
+│   ├── 08_compcars_import.py # CompCars -> YOLO formatı aktarımı
+│   ├── 09_test_galerisi.py
+│   └── 10_compcars_ozellik_tablosu.py  # CompCars özelliklerini Excel'e döker
 ├── models/                  # Hazır modeller (plaka tespit vb.)
 ├── veri/                    # Eğitim verisi (data.yaml + split)
-├── runs/                    # Eğitim çıktıları
-├── db/                      # SQLite veritabanı
+├── runs/                    # Eğitim çıktıları (yerelde oluşur, repoya eklenmez)
+├── db/                      # SQLite veritabanı (yerelde oluşur, repoya eklenmez)
 └── bilgi_notlari/           # Referans notlar ve terimler sözlüğü
 ```
 
